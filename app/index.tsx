@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { gray, spacing, type } from '@/theme';
 
 export default function Index() {
   return (
@@ -15,24 +16,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
-    backgroundColor: '#fbfbfb',
+    gap: spacing.lg,
+    backgroundColor: gray[25],
   },
   heading: {
-    fontFamily: 'BarlowCondensed_700Bold',
-    fontSize: 48,
-    letterSpacing: -1,
-    color: '#141414',
+    ...type.displaySm,
+    color: gray[900],
   },
   body: {
-    fontFamily: 'Barlow_400Regular',
-    fontSize: 14,
-    color: '#3d3d3d',
+    ...type.body,
+    color: gray[700],
   },
   mono: {
-    fontFamily: 'JetBrainsMono_400Regular',
-    fontSize: 11,
-    letterSpacing: 0.4,
-    color: '#767676',
+    ...type.mono,
+    color: gray[500],
   },
 });
