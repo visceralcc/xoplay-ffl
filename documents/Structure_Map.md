@@ -4,7 +4,7 @@
 
 **Status:** Draft
 **Parent:** [Spec_XOPlay_PRD.md](./Spec_XOPlay_PRD.md), [Templates_SpecDocs.md](./Templates_SpecDocs.md)
-**Last updated:** April 2026
+**Last updated:** May 2026
 
 ---
 
@@ -51,28 +51,31 @@ docs/
 │   ├── screens/
 │   │   ├── Screen_AddDrop.md
 │   │   ├── Screen_WaiverClaims.md
-│   │   ├── Screen_TradeProposal.md
+│   │   ├── Screen_TradeBuilder.md
 │   │   ├── Screen_TradeReview.md
 │   │   └── Screen_TradeBait.md
 │   ├── logic/
+│   │   ├── Logic_TransactionValidation.md
 │   │   ├── Logic_WaiverProcessing.md
-│   │   ├── Logic_TradeValidation.md
-│   │   ├── Logic_RosterValidation.md
+│   │   ├── Logic_TradeExecution.md
 │   │   └── Logic_ContractAssignment.md
 │   └── components/
-│       ├── Component_TradeBuilder.md
 │       ├── Component_TradeCapPreview.md
 │       ├── Component_WaiverBidForm.md
+│       ├── Component_TransactionFeed.md
 │       └── Component_PlayerSelector.md
 │
 ├── draft/
 │   ├── Spec_Draft.md
 │   ├── screens/
-│   │   └── Screen_DraftRoom.md
+│   │   ├── Screen_DraftRoom.md
+│   │   ├── Screen_DraftSetup.md
+│   │   └── Screen_DraftResults.md
 │   ├── logic/
-│   │   ├── Logic_PickResolution.md
-│   │   ├── Logic_DraftOrder.md
-│   │   └── Logic_AutoPick.md
+│   │   ├── Logic_PickGeneration.md
+│   │   ├── Logic_TimerEngine.md
+│   │   ├── Logic_AutoPick.md
+│   │   └── Logic_DraftOrderComputation.md
 │   └── components/
 │       ├── Component_DraftBoard.md
 │       ├── Component_DraftTimer.md
@@ -82,31 +85,39 @@ docs/
 ├── auction/
 │   ├── Spec_Auction.md
 │   ├── screens/
-│   │   └── Screen_AuctionRoom.md
+│   │   ├── Screen_AuctionRoom.md
+│   │   ├── Screen_AuctionSetup.md
+│   │   └── Screen_AuctionResults.md
 │   ├── logic/
-│   │   ├── Logic_BidProcessing.md
 │   │   ├── Logic_ProxyBidding.md
-│   │   └── Logic_AvailableFundsCalc.md
+│   │   ├── Logic_AvailableFunds.md
+│   │   ├── Logic_AuctionExpiration.md
+│   │   ├── Logic_AuctionAward.md
+│   │   └── Logic_NominationValidation.md
 │   └── components/
-│       ├── Component_AuctionPlayerCard.md
-│       ├── Component_BidHistory.md
+│       ├── Component_BidBoard.md
+│       ├── Component_FundsMeter.md
+│       ├── Component_PlayerAuctionCard.md
 │       └── Component_NominationForm.md
 │
 ├── roster/
 │   ├── Spec_RosterManagement.md
 │   ├── screens/
 │   │   ├── Screen_RosterEdit.md
-│   │   ├── Screen_LineupSubmission.md
-│   │   └── Screen_IrTaxiManagement.md
+│   │   ├── Screen_LineupSubmit.md
+│   │   └── Screen_RosterCompliance.md
 │   ├── logic/
 │   │   ├── Logic_LineupValidation.md
-│   │   ├── Logic_LineupLocking.md
-│   │   └── Logic_IrEligibility.md
+│   │   ├── Logic_LineupCarryover.md
+│   │   ├── Logic_IRTransition.md
+│   │   ├── Logic_TaxiTransition.md
+│   │   ├── Logic_RosterValidation.md
+│   │   └── Logic_RosterCompliance.md
 │   └── components/
 │       ├── Component_RosterTable.md
-│       ├── Component_LineupSlot.md
-│       ├── Component_PlayerRow.md
-│       └── Component_RosterBucketTabs.md
+│       ├── Component_LineupSlots.md
+│       ├── Component_IRTaxiPanel.md
+│       └── Component_ViolationBanner.md
 │
 ├── franchise/
 │   ├── Spec_FranchiseScreens.md
@@ -253,7 +264,7 @@ The scoring engine doesn't know about WebSockets; the live scoring pipeline call
 ### transactions/
 
 One folder covering adds, drops, waivers, trades, and the shared validation layer (roster checks, cap checks, contract assignment). These are grouped because:
-- They share `Logic_RosterValidation.md` and `Logic_ContractAssignment.md`
+- They share `Logic_TransactionValidation.md` and `Logic_ContractAssignment.md`
 - A trade proposal triggers the same cap-check logic as a waiver bid
 - The commissioner overrides for all transaction types live in one place
 
@@ -300,22 +311,22 @@ Its own folder because the bracket system is self-contained — seeding logic, b
 Not every folder needs its specs at the same time. The order follows the build sequence from PRD §24, adapted for the docs pyramid:
 
 **Write first (foundation):**
-1. `foundation/Spec_DataModel.md`
-2. `foundation/Spec_Tiers.md`
+1. ✅ `foundation/Spec_DataModel.md`
+2. ✅ `foundation/Spec_Tiers.md`
 
 **Write second (core engines — these are the hardest specs):**
-3. `scoring/Spec_ScoringEngine.md`
-4. `salary-cap/Spec_SalaryCapAndContracts.md`
-5. `calendar/Spec_CalendarAndLifecycle.md`
+3. ✅ `scoring/Spec_ScoringEngine.md`
+4. ✅ `salary-cap/Spec_SalaryCapAndContracts.md`
+5. ✅ `calendar/Spec_CalendarAndLifecycle.md`
 
 **Write third (transaction systems):**
-6. `transactions/Spec_Transactions.md`
-7. `draft/Spec_Draft.md`
-8. `auction/Spec_Auction.md`
-9. `roster/Spec_RosterManagement.md`
+6. ✅ `transactions/Spec_Transactions.md`
+7. ✅ `draft/Spec_Draft.md`
+8. ✅ `auction/Spec_Auction.md`
+9. ✅ `roster/Spec_RosterManagement.md`
 
 **Write fourth (surfaces — once the systems are specced, design the UI):**
-10. `foundation/Spec_Navigation.md`
+10. ✅ `foundation/Spec_Navigation.md`
 11. `foundation/Spec_DesignSystem.md`
 12. `franchise/Spec_FranchiseScreens.md`
 13. `league/Spec_LeagueScreens.md`
