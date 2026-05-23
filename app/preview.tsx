@@ -11,6 +11,9 @@ import {
 import { gray, radius, spacing, type as typo } from '@/theme';
 import { Label } from '@/components/Label';
 import { Mono } from '@/components/Mono';
+import { PositionBadge } from '@/components/PositionBadge';
+import { InjuryIndicator } from '@/components/InjuryIndicator';
+import type { InjuryStatus } from '@/theme';
 
 // Component preview system — see ~/.claude/skills/component-preview/SKILL.md.
 // Web-only design tool. Routes inherit fonts loaded by app/_layout.tsx, so
@@ -104,6 +107,51 @@ const REGISTRY: ComponentEntry[] = [
         {props.children as string}
       </Mono>
     ),
+  },
+  {
+    id: 'position-badge',
+    label: 'PositionBadge',
+    category: 'Primitives',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 80,
+    defaultProps: {
+      position: 'QB',
+      size: 'sm',
+    },
+    propControls: [
+      {
+        key: 'position',
+        type: 'select',
+        options: ['QB', 'RB', 'WR', 'TE', 'PK', 'LB', 'CB', 'S', 'FLEX'],
+      },
+      { key: 'size', type: 'select', options: ['sm', 'md', 'lg'] },
+    ],
+    render: (props) => (
+      <PositionBadge
+        position={props.position as string}
+        size={props.size as 'sm' | 'md' | 'lg'}
+      />
+    ),
+  },
+  {
+    id: 'injury-indicator',
+    label: 'InjuryIndicator',
+    category: 'Primitives',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 40,
+    defaultProps: {
+      status: 'Q',
+    },
+    propControls: [
+      { key: 'status', type: 'select', options: ['Q', 'D', 'O', 'IR', 'none'] },
+    ],
+    render: (props) => {
+      const raw = props.status as string;
+      const status = raw === 'none' ? null : (raw as InjuryStatus);
+      return <InjuryIndicator status={status} />;
+    },
   },
 ];
 
