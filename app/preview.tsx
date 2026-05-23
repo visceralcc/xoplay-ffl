@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 import { gray, radius, spacing, type as typo } from '@/theme';
+import { Label } from '@/components/Label';
+import { Mono } from '@/components/Mono';
 
 // Component preview system — see ~/.claude/skills/component-preview/SKILL.md.
 // Web-only design tool. Routes inherit fonts loaded by app/_layout.tsx, so
@@ -45,7 +47,65 @@ type ComponentEntry = {
 
 // ─── registry ────────────────────────────────────────────────────────────────
 
-const REGISTRY: ComponentEntry[] = [];
+// Color options surfaced to the select control. Keys are the labels the user
+// sees in the sidebar; values resolve to actual theme hex when passed into
+// the component. Keeping the list short keeps the canvas legible against the
+// default light canvas background.
+const COLOR_OPTIONS: Record<string, string> = {
+  'gray-300': gray[300],
+  'gray-500': gray[500],
+  'gray-700': gray[700],
+  'gray-900': gray[900],
+};
+const COLOR_KEYS = Object.keys(COLOR_OPTIONS);
+
+const REGISTRY: ComponentEntry[] = [
+  {
+    id: 'label',
+    label: 'Label',
+    category: 'Primitives',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 240,
+    defaultProps: {
+      children: 'Section Header',
+      size: 'md',
+      color: 'gray-500',
+    },
+    propControls: [
+      { key: 'size', type: 'select', options: ['md', 'sm'] },
+      { key: 'color', type: 'select', options: COLOR_KEYS },
+    ],
+    render: (props) => (
+      <Label
+        size={props.size as 'md' | 'sm'}
+        color={COLOR_OPTIONS[props.color as string]}
+      >
+        {props.children as string}
+      </Label>
+    ),
+  },
+  {
+    id: 'mono',
+    label: 'Mono',
+    category: 'Primitives',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 240,
+    defaultProps: {
+      children: 'OAK · M. TORRES',
+      color: 'gray-500',
+    },
+    propControls: [
+      { key: 'color', type: 'select', options: COLOR_KEYS },
+    ],
+    render: (props) => (
+      <Mono color={COLOR_OPTIONS[props.color as string]}>
+        {props.children as string}
+      </Mono>
+    ),
+  },
+];
 
 // ─── frame constants ─────────────────────────────────────────────────────────
 
