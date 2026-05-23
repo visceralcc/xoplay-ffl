@@ -18,7 +18,8 @@ import { FranchiseMark } from '@/components/FranchiseMark';
 import { LiveDot } from '@/components/LiveDot';
 import { StatValue } from '@/components/StatValue';
 import { SegmentControl } from '@/components/SegmentControl';
-import { franchises } from '@/data/mockData';
+import { PlayerRow } from '@/components/PlayerRow';
+import { franchises, players } from '@/data/mockData';
 import type { InjuryStatus } from '@/theme';
 
 // Component preview system — see ~/.claude/skills/component-preview/SKILL.md.
@@ -292,6 +293,42 @@ const REGISTRY: ComponentEntry[] = [
       // key remounts the demo so internal activeIndex resets to 0 — avoids
       // an out-of-range index when shrinking from 4 segments to 2.
       return <SegmentControlDemo key={preset} segments={segments} />;
+    },
+  },
+  {
+    id: 'player-row',
+    label: 'PlayerRow',
+    category: 'Data Display',
+    backgroundColor: gray[0],
+    frameMode: 'naked',
+    componentWidth: 700,
+    defaultProps: {
+      density: 'standard',
+    },
+    propControls: [
+      { key: 'density', type: 'select', options: ['standard', 'compact'] },
+    ],
+    // Picks four players that exercise the spec's interesting cases:
+    // a HEALTHY QB (no indicator), a QUESTIONABLE RB (Q badge), a DOUBTFUL
+    // WR (D badge), and an IR DE (IR badge — two-letter variant).
+    render: (props) => {
+      const ids = [
+        'plr-davis-carter',
+        'plr-deshaun-williams',
+        'plr-andre-ortiz',
+        'plr-anton-givens',
+      ];
+      const rows = ids
+        .map((id) => players.find((p) => p.id === id))
+        .filter((p): p is (typeof players)[number] => p != null);
+      const density = props.density as 'standard' | 'compact';
+      return (
+        <View>
+          {rows.map((player) => (
+            <PlayerRow key={player.id} player={player} density={density} />
+          ))}
+        </View>
+      );
     },
   },
 ];
