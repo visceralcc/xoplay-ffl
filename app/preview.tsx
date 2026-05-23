@@ -18,8 +18,9 @@ import { FranchiseMark } from '@/components/FranchiseMark';
 import { LiveDot } from '@/components/LiveDot';
 import { StatValue } from '@/components/StatValue';
 import { SegmentControl } from '@/components/SegmentControl';
-import { PlayerRow } from '@/components/PlayerRow';
-import { franchises, players } from '@/data/mockData';
+import { PlayerRow, type PlayerRowColumnKey } from '@/components/PlayerRow';
+import { DataTable, type DataTableColumn, type Density } from '@/components/DataTable';
+import { franchises, players, type Player } from '@/data/mockData';
 import type { InjuryStatus } from '@/theme';
 
 // Component preview system — see ~/.claude/skills/component-preview/SKILL.md.
@@ -80,6 +81,83 @@ function SegmentControlDemo({ segments }: { segments: string[] }) {
       segments={segments}
       activeIndex={Math.min(active, segments.length - 1)}
       onChangeIndex={setActive}
+    />
+  );
+}
+
+// Shared column array — DataTable uses it for headers + sort metadata,
+// PlayerRow uses it for cell layout/widths. Keys are typed as
+// PlayerRowColumnKey so the same array satisfies PlayerRow's tighter
+// ColumnDef while still being a valid DataTableColumn[] (PlayerRowColumnKey
+// extends string).
+const ROSTER_COLUMNS: Array<{
+  key: PlayerRowColumnKey;
+  label: string;
+  width?: number;
+  align?: 'left' | 'right';
+  sortable?: boolean;
+}> = [
+  { key: 'position', label: 'POS', width: 40, sortable: true },
+  { key: 'headshot', label: '', width: 32 },
+  { key: 'nameTeam', label: 'Player', sortable: true },
+  { key: 'injury', label: '', width: 16 },
+  { key: 'salary', label: 'Salary', width: 60, align: 'right', sortable: true },
+  { key: 'contractYears', label: 'Yrs', width: 36, align: 'right' },
+  { key: 'weekScore', label: 'Wk', width: 50, align: 'right' },
+  { key: 'seasonTotal', label: 'Total', width: 64, align: 'right', sortable: true },
+];
+
+function sortPlayers(
+  arr: Player[],
+  key: string,
+  dir: 'asc' | 'desc',
+): Player[] {
+  const copy = [...arr];
+  copy.sort((a, b) => {
+    let cmp = 0;
+    if (key === 'nameTeam') cmp = a.lastName.localeCompare(b.lastName);
+    else if (key === 'position') cmp = a.position.localeCompare(b.position);
+    else if (key === 'salary') cmp = a.salary - b.salary;
+    else if (key === 'seasonTotal') cmp = a.seasonTotal - b.seasonTotal;
+    return dir === 'asc' ? cmp : -cmp;
+  });
+  return copy;
+}
+
+function DataTableDemo() {
+  const [density, setDensity] = useState<Density>('standard');
+  const [sortKey, setSortKey] = useState<string>('seasonTotal');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const handleSort = (key: string) => {
+    if (key === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDir('desc');
+    }
+  };
+
+  // Slice to 8 rows so the canvas stays a reasonable height; the table
+  // mechanics are the point, not the full roster.
+  const data = sortPlayers(players.slice(0, 8), sortKey, sortDir);
+
+  return (
+    <DataTable<Player>
+      columns={ROSTER_COLUMNS as DataTableColumn<Player>[]}
+      data={data}
+      renderRow={(player) => (
+        <PlayerRow
+          player={player}
+          density={density}
+          columns={ROSTER_COLUMNS}
+        />
+      )}
+      density={density}
+      onDensityChange={setDensity}
+      sortKey={sortKey}
+      sortDirection={sortDir}
+      onSort={handleSort}
     />
   );
 }
@@ -330,6 +408,21 @@ const REGISTRY: ComponentEntry[] = [
         </View>
       );
     },
+  },
+  {
+    id: 'data-table',
+    label: 'DataTable',
+    category: 'Data Display',
+    backgroundColor: gray[0],
+    frameMode: 'naked',
+    componentWidth: 800,
+    defaultProps: {},
+    // Density + sort are managed inside DataTableDemo because the registry's
+    // render closure can't hold state. Tapping a sortable header flips the
+    // sort direction (or switches the active column); tapping the toolbar's
+    // Standard/Compact segments toggles both header height and row density
+    // because the same density value is passed to PlayerRow.
+    render: () => <DataTableDemo />,
   },
 ];
 
