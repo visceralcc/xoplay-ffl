@@ -13,6 +13,9 @@ import { Label } from '@/components/Label';
 import { Mono } from '@/components/Mono';
 import { PositionBadge } from '@/components/PositionBadge';
 import { InjuryIndicator } from '@/components/InjuryIndicator';
+import { Headshot } from '@/components/Headshot';
+import { FranchiseMark } from '@/components/FranchiseMark';
+import { franchises } from '@/data/mockData';
 import type { InjuryStatus } from '@/theme';
 
 // Component preview system — see ~/.claude/skills/component-preview/SKILL.md.
@@ -151,6 +154,53 @@ const REGISTRY: ComponentEntry[] = [
       const raw = props.status as string;
       const status = raw === 'none' ? null : (raw as InjuryStatus);
       return <InjuryIndicator status={status} />;
+    },
+  },
+  {
+    id: 'headshot',
+    label: 'Headshot',
+    category: 'Primitives',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 120,
+    defaultProps: {
+      size: 64,
+    },
+    propControls: [
+      { key: 'size', type: 'stepper', min: 24, max: 96, step: 8 },
+    ],
+    render: (props) => <Headshot size={props.size as number} />,
+  },
+  {
+    id: 'franchise-mark',
+    label: 'FranchiseMark',
+    category: 'Primitives',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 120,
+    defaultProps: {
+      franchise: 'OAK',
+      size: 64,
+    },
+    propControls: [
+      {
+        key: 'franchise',
+        type: 'select',
+        options: ['OAK', 'MIA', 'BRO', 'SAN', 'PRT'],
+      },
+      { key: 'size', type: 'stepper', min: 24, max: 96, step: 8 },
+    ],
+    render: (props) => {
+      const abbr = props.franchise as string;
+      const match = franchises.find((f) => f.abbreviation === abbr);
+      // Mock data is the source of truth here; the component only needs the
+      // colors and abbreviation to pick its mark.
+      const franchise = match ?? {
+        abbreviation: abbr,
+        primaryColor: gray[300],
+        secondaryColor: gray[700],
+      };
+      return <FranchiseMark franchise={franchise} size={props.size as number} />;
     },
   },
 ];
