@@ -15,6 +15,8 @@ import { PositionBadge } from '@/components/PositionBadge';
 import { InjuryIndicator } from '@/components/InjuryIndicator';
 import { Headshot } from '@/components/Headshot';
 import { FranchiseMark } from '@/components/FranchiseMark';
+import { LiveDot } from '@/components/LiveDot';
+import { StatValue } from '@/components/StatValue';
 import { franchises } from '@/data/mockData';
 import type { InjuryStatus } from '@/theme';
 
@@ -202,6 +204,48 @@ const REGISTRY: ComponentEntry[] = [
       };
       return <FranchiseMark franchise={franchise} size={props.size as number} />;
     },
+  },
+  {
+    id: 'live-dot',
+    label: 'LiveDot',
+    category: 'Primitives',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 40,
+    defaultProps: {
+      size: 8,
+    },
+    propControls: [
+      { key: 'size', type: 'stepper', min: 6, max: 16, step: 2 },
+    ],
+    render: (props) => <LiveDot size={props.size as number} />,
+  },
+  {
+    id: 'stat-value',
+    label: 'StatValue',
+    category: 'Primitives',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 200,
+    defaultProps: {
+      label: 'Cap Room',
+      value: '$23.50',
+      size: 'md',
+      layout: 'vertical',
+    },
+    propControls: [
+      { key: 'size', type: 'select', options: ['sm', 'md', 'lg'] },
+      { key: 'layout', type: 'select', options: ['vertical', 'horizontal'] },
+      { key: 'value', type: 'select', options: ['$23.50', '1,432.8', '7-3', '0.00'] },
+    ],
+    render: (props) => (
+      <StatValue
+        label={props.label as string}
+        value={props.value as string}
+        size={props.size as 'sm' | 'md' | 'lg'}
+        layout={props.layout as 'vertical' | 'horizontal'}
+      />
+    ),
   },
 ];
 
