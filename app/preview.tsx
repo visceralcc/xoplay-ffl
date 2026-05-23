@@ -17,6 +17,7 @@ import { Headshot } from '@/components/Headshot';
 import { FranchiseMark } from '@/components/FranchiseMark';
 import { LiveDot } from '@/components/LiveDot';
 import { StatValue } from '@/components/StatValue';
+import { SegmentControl } from '@/components/SegmentControl';
 import { franchises } from '@/data/mockData';
 import type { InjuryStatus } from '@/theme';
 
@@ -66,6 +67,21 @@ const COLOR_OPTIONS: Record<string, string> = {
   'gray-900': gray[900],
 };
 const COLOR_KEYS = Object.keys(COLOR_OPTIONS);
+
+// Demo wrapper for SegmentControl — the component is controlled, but in the
+// preview the consumer is the registry render closure, which doesn't have a
+// place to hold state. Wrapping in a small local component gives us that
+// state slot so tapping a segment actually flips the active visual.
+function SegmentControlDemo({ segments }: { segments: string[] }) {
+  const [active, setActive] = useState(0);
+  return (
+    <SegmentControl
+      segments={segments}
+      activeIndex={Math.min(active, segments.length - 1)}
+      onChangeIndex={setActive}
+    />
+  );
+}
 
 const REGISTRY: ComponentEntry[] = [
   {
@@ -246,6 +262,37 @@ const REGISTRY: ComponentEntry[] = [
         layout={props.layout as 'vertical' | 'horizontal'}
       />
     ),
+  },
+  {
+    id: 'segment-control',
+    label: 'SegmentControl',
+    category: 'Controls',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 300,
+    defaultProps: {
+      preset: 'Roster',
+    },
+    propControls: [
+      {
+        key: 'preset',
+        type: 'select',
+        options: ['Roster', 'Density', 'Quarter'],
+      },
+    ],
+    render: (props) => {
+      const preset = props.preset as string;
+      const segments =
+        preset === 'Density'
+          ? ['Standard', 'Compact']
+          : preset === 'Quarter'
+            ? ['Q1', 'Q2', 'Q3', 'Q4']
+            : ['Active', 'IR', 'Taxi'];
+      // The preset string changes the segments array; using preset as the
+      // key remounts the demo so internal activeIndex resets to 0 — avoids
+      // an out-of-range index when shrinking from 4 segments to 2.
+      return <SegmentControlDemo key={preset} segments={segments} />;
+    },
   },
 ];
 
