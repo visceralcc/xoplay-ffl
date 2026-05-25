@@ -16,6 +16,7 @@ import { InjuryIndicator } from '@/components/InjuryIndicator';
 import { Headshot } from '@/components/Headshot';
 import { FranchiseMark } from '@/components/FranchiseMark';
 import { LiveDot } from '@/components/LiveDot';
+import { ScoreDisplay } from '@/components/ScoreDisplay';
 import { ScoreNum } from '@/components/ScoreNum';
 import { StatValue } from '@/components/StatValue';
 import { SegmentControl } from '@/components/SegmentControl';
@@ -362,6 +363,55 @@ const REGISTRY: ComponentEntry[] = [
         size={props.size as 'sm' | 'md' | 'lg' | 'xl'}
       />
     ),
+  },
+  {
+    id: 'score-display',
+    label: 'ScoreDisplay',
+    category: 'Scoring',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 200,
+    defaultProps: {
+      franchise: 'OAK',
+      score: '142.36',
+      layout: 'full',
+      scoreSize: 'md',
+      isLive: false,
+      isWinning: true,
+    },
+    propControls: [
+      {
+        key: 'franchise',
+        type: 'select',
+        options: ['OAK', 'MIA', 'BRO', 'SAN', 'PRT'],
+      },
+      { key: 'layout', type: 'select', options: ['full', 'compact'] },
+      { key: 'scoreSize', type: 'select', options: ['sm', 'md', 'lg', 'xl'] },
+      { key: 'isLive', type: 'toggle' },
+      { key: 'isWinning', type: 'toggle' },
+    ],
+    render: (props) => {
+      const abbr = props.franchise as string;
+      const match = franchises.find((f) => f.abbreviation === abbr);
+      // Fallback keeps the preview alive if the selector is ever pointed at
+      // a franchise that's been removed from mockData — uses §8.6 generic.
+      const franchise = match ?? {
+        name: 'Generic Franchise',
+        abbreviation: abbr,
+        primaryColor: gray[800],
+        secondaryColor: gray[400],
+      };
+      return (
+        <ScoreDisplay
+          franchise={franchise}
+          score={props.score as string}
+          layout={props.layout as 'full' | 'compact'}
+          scoreSize={props.scoreSize as 'sm' | 'md' | 'lg' | 'xl'}
+          isLive={Boolean(props.isLive)}
+          isWinning={Boolean(props.isWinning)}
+        />
+      );
+    },
   },
   {
     id: 'stat-value',
