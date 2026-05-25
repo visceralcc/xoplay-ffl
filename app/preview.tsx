@@ -16,6 +16,7 @@ import { InjuryIndicator } from '@/components/InjuryIndicator';
 import { Headshot } from '@/components/Headshot';
 import { FranchiseMark } from '@/components/FranchiseMark';
 import { LiveDot } from '@/components/LiveDot';
+import { MatchupCard } from '@/components/MatchupCard';
 import { ScoreDisplay } from '@/components/ScoreDisplay';
 import { ScoreNum } from '@/components/ScoreNum';
 import { StatValue } from '@/components/StatValue';
@@ -410,6 +411,58 @@ const REGISTRY: ComponentEntry[] = [
           isLive={Boolean(props.isLive)}
           isWinning={Boolean(props.isWinning)}
         />
+      );
+    },
+  },
+  {
+    id: 'matchup-card',
+    label: 'MatchupCard',
+    category: 'Scoring',
+    backgroundColor: gray[100],
+    frameMode: 'naked',
+    componentWidth: 380,
+    defaultProps: {
+      status: 'live',
+      variant: 'standard',
+    },
+    propControls: [
+      {
+        key: 'status',
+        type: 'select',
+        options: ['upcoming', 'live', 'final'],
+      },
+      { key: 'variant', type: 'select', options: ['standard', 'compact'] },
+    ],
+    // Two matchups exercise the spec's franchise-pair edge cases:
+    // Oakland (dark green) vs Miami (hot pink) — classic clashing pair,
+    // and Brooklyn (near-black navy) vs San Antonio (near-white cream) —
+    // both contrast extremes in one card.
+    render: (props) => {
+      const status = props.status as 'upcoming' | 'live' | 'final';
+      const variant = props.variant as 'standard' | 'compact';
+      const oak = franchises.find((f) => f.abbreviation === 'OAK')!;
+      const mia = franchises.find((f) => f.abbreviation === 'MIA')!;
+      const bro = franchises.find((f) => f.abbreviation === 'BRO')!;
+      const san = franchises.find((f) => f.abbreviation === 'SAN')!;
+      return (
+        <Stack gap={spacing.lg}>
+          <MatchupCard
+            awayTeam={{ franchise: oak, score: '142.36' }}
+            homeTeam={{ franchise: mia, score: '128.90' }}
+            weekNumber={11}
+            status={status}
+            variant={variant}
+            onPress={() => {}}
+          />
+          <MatchupCard
+            awayTeam={{ franchise: bro, score: '118.45' }}
+            homeTeam={{ franchise: san, score: '124.10' }}
+            weekNumber={11}
+            status={status}
+            variant={variant}
+            onPress={() => {}}
+          />
+        </Stack>
       );
     },
   },
