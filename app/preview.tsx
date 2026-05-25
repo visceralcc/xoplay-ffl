@@ -20,6 +20,9 @@ import { StatValue } from '@/components/StatValue';
 import { SegmentControl } from '@/components/SegmentControl';
 import { PlayerRow, type PlayerRowColumnKey } from '@/components/PlayerRow';
 import { DataTable, type DataTableColumn, type Density } from '@/components/DataTable';
+import { Card } from '@/components/Card';
+import { Section } from '@/components/Section';
+import { Stack } from '@/components/Stack';
 import { franchises, players, type Player } from '@/data/mockData';
 import type { InjuryStatus } from '@/theme';
 
@@ -122,6 +125,27 @@ function sortPlayers(
     return dir === 'asc' ? cmp : -cmp;
   });
   return copy;
+}
+
+// Layout previews need small visual "blocks" to demonstrate spacing/wrap
+// behavior without depending on real content. Color-coded so each child is
+// distinguishable in the canvas.
+function LayoutBlock({
+  width = 60,
+  height = 32,
+  color,
+  label,
+}: {
+  width?: number;
+  height?: number;
+  color: string;
+  label?: string;
+}) {
+  return (
+    <View style={[styles.layoutBlock, { width, height, backgroundColor: color }]}>
+      {label ? <Text style={styles.layoutBlockLabel}>{label}</Text> : null}
+    </View>
+  );
 }
 
 function DataTableDemo() {
@@ -408,6 +432,122 @@ const REGISTRY: ComponentEntry[] = [
         </View>
       );
     },
+  },
+  {
+    id: 'card',
+    label: 'Card',
+    category: 'Layout',
+    backgroundColor: gray[100],
+    frameMode: 'naked',
+    componentWidth: 360,
+    defaultProps: {
+      padding: spacing.lg,
+    },
+    propControls: [
+      { key: 'padding', type: 'stepper', min: 0, max: 32, step: 4 },
+    ],
+    render: (props) => (
+      <Card padding={props.padding as number}>
+        <Stack gap={spacing.sm}>
+          <Label>Week 11 Matchup</Label>
+          <Text style={{ ...typo.headlineSm, color: gray[950] }}>
+            Oakdale Timberwolves
+          </Text>
+          <Text style={{ ...typo.body, color: gray[600] }}>
+            Card is an elevated surface — border, shadow, radius-md, overflow
+            hidden. Use it to separate grouped content on a page.
+          </Text>
+        </Stack>
+      </Card>
+    ),
+  },
+  {
+    id: 'section',
+    label: 'Section',
+    category: 'Layout',
+    backgroundColor: gray[0],
+    frameMode: 'naked',
+    componentWidth: 360,
+    defaultProps: {},
+    render: () => (
+      <Stack gap={spacing.xl}>
+        <Section
+          title="Starters"
+          action={
+            <Text style={{ ...typo.bodyXs, color: gray[500] }}>View All</Text>
+          }
+        >
+          <Stack gap={spacing.sm}>
+            <Text style={{ ...typo.body, color: gray[800] }}>
+              D. Carter — QB
+            </Text>
+            <Text style={{ ...typo.body, color: gray[800] }}>
+              T. Patterson — RB
+            </Text>
+            <Text style={{ ...typo.body, color: gray[800] }}>
+              J. Hampton — WR
+            </Text>
+          </Stack>
+        </Section>
+        <Section title="Bench" collapsible>
+          <Stack gap={spacing.sm}>
+            <Text style={{ ...typo.body, color: gray[800] }}>
+              A. Ortiz — WR
+            </Text>
+            <Text style={{ ...typo.body, color: gray[800] }}>
+              M. Givens — TE
+            </Text>
+          </Stack>
+        </Section>
+        <Section title="Injured Reserve" collapsible defaultCollapsed>
+          <Stack gap={spacing.sm}>
+            <Text style={{ ...typo.body, color: gray[800] }}>
+              A. Givens — DE (IR)
+            </Text>
+          </Stack>
+        </Section>
+      </Stack>
+    ),
+  },
+  {
+    id: 'stack',
+    label: 'Stack',
+    category: 'Layout',
+    backgroundColor: gray[100],
+    frameMode: 'naked',
+    componentWidth: 360,
+    defaultProps: {},
+    render: () => (
+      <Stack gap={spacing.xl}>
+        <Stack gap={spacing.xs}>
+          <Label size="sm">Vertical · gap md</Label>
+          <Stack gap={spacing.md}>
+            <LayoutBlock color={gray[700]} width={120} label="1" />
+            <LayoutBlock color={gray[600]} width={160} label="2" />
+            <LayoutBlock color={gray[500]} width={100} label="3" />
+          </Stack>
+        </Stack>
+        <Stack gap={spacing.xs}>
+          <Label size="sm">Horizontal · gap sm · align center</Label>
+          <Stack direction="horizontal" gap={spacing.sm} align="center">
+            <LayoutBlock color={gray[700]} width={60} label="1" />
+            <LayoutBlock color={gray[600]} width={60} height={48} label="2" />
+            <LayoutBlock color={gray[500]} width={60} label="3" />
+            <LayoutBlock color={gray[400]} width={60} height={40} label="4" />
+          </Stack>
+        </Stack>
+        <Stack gap={spacing.xs}>
+          <Label size="sm">Horizontal · wrap · gap md</Label>
+          <Stack direction="horizontal" gap={spacing.md} wrap>
+            <LayoutBlock color={gray[700]} width={100} label="1" />
+            <LayoutBlock color={gray[600]} width={100} label="2" />
+            <LayoutBlock color={gray[500]} width={100} label="3" />
+            <LayoutBlock color={gray[400]} width={100} label="4" />
+            <LayoutBlock color={gray[300]} width={100} label="5" />
+          </Stack>
+        </Stack>
+      </Stack>
+    ),
   },
   {
     id: 'data-table',
@@ -877,6 +1017,17 @@ const styles = StyleSheet.create({
   },
   nakedErrorText: {
     ...typo.body,
+    color: gray[0],
+  },
+
+  // layout previews
+  layoutBlock: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.sm,
+  },
+  layoutBlockLabel: {
+    ...typo.mono,
     color: gray[0],
   },
 
