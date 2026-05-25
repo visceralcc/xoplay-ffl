@@ -16,6 +16,7 @@ import { InjuryIndicator } from '@/components/InjuryIndicator';
 import { Headshot } from '@/components/Headshot';
 import { FranchiseMark } from '@/components/FranchiseMark';
 import { LiveDot } from '@/components/LiveDot';
+import { ScoreNum } from '@/components/ScoreNum';
 import { StatValue } from '@/components/StatValue';
 import { SegmentControl } from '@/components/SegmentControl';
 import { PlayerRow, type PlayerRowColumnKey } from '@/components/PlayerRow';
@@ -339,6 +340,28 @@ const REGISTRY: ComponentEntry[] = [
       { key: 'size', type: 'stepper', min: 6, max: 16, step: 2 },
     ],
     render: (props) => <LiveDot size={props.size as number} />,
+  },
+  {
+    id: 'score-num',
+    label: 'ScoreNum',
+    category: 'Scoring',
+    backgroundColor: gray[50],
+    frameMode: 'naked',
+    componentWidth: 200,
+    defaultProps: {
+      value: '142.36',
+      size: 'lg',
+    },
+    propControls: [
+      { key: 'size', type: 'select', options: ['sm', 'md', 'lg', 'xl'] },
+      { key: 'value', type: 'select', options: ['142.36', '0.00', '87.50'] },
+    ],
+    render: (props) => (
+      <ScoreNum
+        value={props.value as string}
+        size={props.size as 'sm' | 'md' | 'lg' | 'xl'}
+      />
+    ),
   },
   {
     id: 'stat-value',
