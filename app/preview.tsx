@@ -23,6 +23,7 @@ import { DataTable, type DataTableColumn, type Density } from '@/components/Data
 import { Card } from '@/components/Card';
 import { Section } from '@/components/Section';
 import { Stack } from '@/components/Stack';
+import { PageShell } from '@/components/PageShell';
 import { franchises, players, type Player } from '@/data/mockData';
 import type { InjuryStatus } from '@/theme';
 
@@ -548,6 +549,62 @@ const REGISTRY: ComponentEntry[] = [
         </Stack>
       </Stack>
     ),
+  },
+  {
+    id: 'page-shell',
+    label: 'PageShell',
+    category: 'Layout',
+    backgroundColor: gray[100],
+    frameMode: 'phone',
+    defaultProps: {},
+    render: () => {
+      const oakland = franchises.find((f) => f.abbreviation === 'OAK');
+      return (
+        <PageShell
+          leagueName={oakland?.name ?? 'Oakdale Timberwolves'}
+          franchise={oakland}
+          activeSection="My Team"
+        >
+          <Stack gap={spacing.lg}>
+            <Card>
+              <Stack gap={spacing.sm}>
+                <Label>This Week</Label>
+                <Text style={{ ...typo.headlineSm, color: gray[950] }}>
+                  Week 11 · vs Miami Tempo
+                </Text>
+                <Text style={{ ...typo.body, color: gray[600] }}>
+                  Lock your starters before Sunday 1:00 PM. Three players are
+                  on bye and one is questionable.
+                </Text>
+              </Stack>
+            </Card>
+            <Card>
+              <Stack gap={spacing.sm}>
+                <Label>Record</Label>
+                <Text style={{ ...typo.headlineMd, color: gray[950] }}>
+                  7 – 3
+                </Text>
+                <Text style={{ ...typo.body, color: gray[600] }}>
+                  Currently 2nd in division. PF 1,180.45 · PA 1,085.20.
+                </Text>
+              </Stack>
+            </Card>
+            <Card>
+              <Stack gap={spacing.sm}>
+                <Label>Recent Activity</Label>
+                <Text style={{ ...typo.body, color: gray[800] }}>
+                  Trade complete — BRO sends 2026 1st-round pick to OAK for
+                  RB T. Patterson.
+                </Text>
+                <Text style={{ ...typo.body, color: gray[800] }}>
+                  Waiver claim processed — added WR J. Hampton.
+                </Text>
+              </Stack>
+            </Card>
+          </Stack>
+        </PageShell>
+      );
+    },
   },
   {
     id: 'data-table',
