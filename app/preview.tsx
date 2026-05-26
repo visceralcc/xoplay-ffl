@@ -14,6 +14,7 @@ import { Mono } from '@/components/Mono';
 import { PositionBadge } from '@/components/PositionBadge';
 import { InjuryIndicator } from '@/components/InjuryIndicator';
 import { Headshot } from '@/components/Headshot';
+import { FranchiseHeader } from '@/components/FranchiseHeader';
 import { FranchiseMark } from '@/components/FranchiseMark';
 import { LiveDot } from '@/components/LiveDot';
 import { MatchupCard } from '@/components/MatchupCard';
@@ -731,6 +732,35 @@ const REGISTRY: ComponentEntry[] = [
         </PageShell>
       );
     },
+  },
+  {
+    id: 'franchise-header',
+    label: 'FranchiseHeader',
+    category: 'Franchise',
+    backgroundColor: gray[100],
+    frameMode: 'naked',
+    componentWidth: 390,
+    defaultProps: {},
+    // Stacks all five sample franchises so the canvas exercises the full
+    // safeBlock() range — dark green, hot pink, near-black navy, near-white
+    // cream (gets the gray-300 border), and deep purple — in one shot.
+    render: () => (
+      <Stack gap={spacing.md}>
+        {franchises.map((f) => (
+          <FranchiseHeader
+            key={f.id}
+            franchise={f}
+            ownerName={f.ownerName}
+            record={f.record}
+            divisionRecord="3-1 DIV"
+            tierLabel="DYNASTY · SALARY · CONTRACT"
+            pointsFor={f.pointsFor.toFixed(2)}
+            pointsAgainst={f.pointsAgainst.toFixed(2)}
+            streak="W2"
+          />
+        ))}
+      </Stack>
+    ),
   },
   {
     id: 'data-table',
