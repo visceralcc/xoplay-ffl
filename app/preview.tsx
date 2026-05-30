@@ -25,6 +25,7 @@ import { SegmentControl } from '@/components/SegmentControl';
 import { PlayerRow, type PlayerRowColumnKey } from '@/components/PlayerRow';
 import { DataTable, type DataTableColumn, type Density } from '@/components/DataTable';
 import { Card } from '@/components/Card';
+import { CapMeter } from '@/components/CapMeter';
 import { Section } from '@/components/Section';
 import { Stack } from '@/components/Stack';
 import { PageShell } from '@/components/PageShell';
@@ -761,6 +762,69 @@ const REGISTRY: ComponentEntry[] = [
         ))}
       </Stack>
     ),
+  },
+  {
+    id: 'cap-meter',
+    label: 'CapMeter',
+    category: 'Cap',
+    backgroundColor: gray[0],
+    frameMode: 'naked',
+    componentWidth: 300,
+    defaultProps: {
+      state: 'near-cap',
+      size: 'md',
+      showLabels: true,
+      showRoom: true,
+    },
+    propControls: [
+      { key: 'state', type: 'select', options: ['under-cap', 'near-cap', 'over-cap'] },
+      { key: 'size', type: 'select', options: ['md', 'sm'] },
+      { key: 'showLabels', type: 'toggle' },
+      { key: 'showRoom', type: 'toggle' },
+    ],
+    // capTotal is the real Dynasty cap ($222.75) from mockData; capUsed is
+    // derived from the selected state so the control sweeps healthy (75%),
+    // warning (92%), and over-cap (105%). The static stack beneath the
+    // interactive meter shows all three full-size states plus the bar-only
+    // small variant at once (Spec §4.6 done-criteria).
+    render: (props) => {
+      const capTotal = franchises[0].capTotal;
+      const pctByState: Record<string, number> = {
+        'under-cap': 0.75,
+        'near-cap': 0.92,
+        'over-cap': 1.05,
+      };
+      const pct = pctByState[props.state as string] ?? 0.92;
+      return (
+        <Stack gap={spacing.xl}>
+          <CapMeter
+            capUsed={capTotal * pct}
+            capTotal={capTotal}
+            size={props.size as 'sm' | 'md'}
+            showLabels={Boolean(props.showLabels)}
+            showRoom={Boolean(props.showRoom)}
+          />
+          <Stack gap={spacing.lg}>
+            <Stack gap={spacing.xs}>
+              <Label size="sm">Healthy · 75%</Label>
+              <CapMeter capUsed={capTotal * 0.75} capTotal={capTotal} />
+            </Stack>
+            <Stack gap={spacing.xs}>
+              <Label size="sm">Warning · 92%</Label>
+              <CapMeter capUsed={capTotal * 0.92} capTotal={capTotal} />
+            </Stack>
+            <Stack gap={spacing.xs}>
+              <Label size="sm">Over cap · 105%</Label>
+              <CapMeter capUsed={capTotal * 1.05} capTotal={capTotal} />
+            </Stack>
+            <Stack gap={spacing.xs}>
+              <Label size="sm">Small · bar only</Label>
+              <CapMeter capUsed={capTotal * 0.92} capTotal={capTotal} size="sm" />
+            </Stack>
+          </Stack>
+        </Stack>
+      );
+    },
   },
   {
     id: 'data-table',
