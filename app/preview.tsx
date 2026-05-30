@@ -36,6 +36,7 @@ import {
   players,
   transactions,
   type Player,
+  type TransactionType,
 } from '@/data/mockData';
 import type { InjuryStatus } from '@/theme';
 
@@ -845,26 +846,76 @@ const REGISTRY: ComponentEntry[] = [
     // distinct icons (ADD_DROP ↕, WAIVER_CLAIM ◆, TRADE_COMPLETED ⇄,
     // IR_MOVE +), the franchise color dot per row, single-line truncation on
     // the long trade description, and relative-time formatting.
-    render: () => (
-      <View>
-        {transactions.map((tx) => {
-          const f = getFranchiseById(tx.franchiseId);
-          return (
-            <TransactionRow
-              key={tx.id}
-              type={tx.type}
-              description={tx.details}
-              timestamp={tx.timestamp}
-              franchise={
-                f
-                  ? { abbreviation: f.abbreviation, primaryColor: f.primaryColor }
-                  : undefined
-              }
-            />
-          );
-        })}
-      </View>
-    ),
+    //
+    // The mockData rows are all dated Nov 2025, so they all render via the
+    // short-date branch. The three synthetic fixtures above them are
+    // preview-only demo data (NOT in mockData.ts) with timestamps computed
+    // from now, so they exercise the "Xm/Xh/Xd ago" branches the dataset
+    // otherwise can't reach.
+    render: () => {
+      const MINUTE = 60_000;
+      const HOUR = 60 * MINUTE;
+      const DAY = 24 * HOUR;
+      const recent: Array<{
+        id: string;
+        type: TransactionType;
+        timestamp: string;
+        details: string;
+        franchiseId?: string;
+      }> = [
+        {
+          id: 'demo-recent-1',
+          type: 'ADD_DROP',
+          timestamp: new Date(Date.now() - 30 * MINUTE).toISOString(),
+          details: 'Added WR Rico Alvarado (HOU); dropped TE Brock Sterling (SEA)',
+          franchiseId: 'fr-oak',
+        },
+        {
+          id: 'demo-recent-2',
+          type: 'WAIVER_CLAIM',
+          timestamp: new Date(Date.now() - 6 * HOUR).toISOString(),
+          details: 'Waiver claim awarded — RB Devon Mitchell (CHI), bid $8',
+        },
+        {
+          id: 'demo-recent-3',
+          type: 'TRADE_COMPLETED',
+          timestamp: new Date(Date.now() - 3 * DAY).toISOString(),
+          details:
+            'Trade complete — MIA sends WR Andre Ortiz to SAN for a 2027 2nd-round pick',
+          franchiseId: 'fr-mia',
+        },
+      ];
+      const rows = [
+        ...recent,
+        ...transactions.map((tx) => ({
+          id: tx.id,
+          type: tx.type,
+          timestamp: tx.timestamp,
+          details: tx.details,
+          franchiseId: tx.franchiseId,
+        })),
+      ];
+      return (
+        <View>
+          {rows.map((tx) => {
+            const f = tx.franchiseId ? getFranchiseById(tx.franchiseId) : undefined;
+            return (
+              <TransactionRow
+                key={tx.id}
+                type={tx.type}
+                description={tx.details}
+                timestamp={tx.timestamp}
+                franchise={
+                  f
+                    ? { abbreviation: f.abbreviation, primaryColor: f.primaryColor }
+                    : undefined
+                }
+              />
+            );
+          })}
+        </View>
+      );
+    },
   },
   {
     id: 'data-table',
