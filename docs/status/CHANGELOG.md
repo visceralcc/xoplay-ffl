@@ -1,0 +1,16 @@
+# XO Play — Changelog
+
+All notable changes, logged per session. Tags: `[ui]` `[data]` `[infra]` `[spec]` `[fix]` `[docs]`
+
+---
+
+## 2026-05-30
+
+- [ui] Built `CapMeter` — salary cap usage bar with healthy / warning / over-cap states, optional labels + room text, and a bar-only `sm` variant; preview entry under a new "Cap" category with state/size controls and a full-state stack
+- [ui] Built `TransactionRow` — compact feed item with type icon, optional franchise color dot, truncating description, and relative-time timestamp via `Mono`; preview entry stacks the five mockData transactions (the last two Batch 5 sub-component prerequisites — both now ✅)
+- [ui] Added three synthetic preview-only rows to the TransactionRow preview (30m/6h/3d ago) so the relative-time branches show alongside the Nov short-date rows; `mockData.ts` untouched
+- [docs] Synced `BUILD_STATUS.md` to actual repo state (Batches 1–4 + FranchiseHeader complete; CapMeter / TransactionRow specced-not-built)
+- [docs] Added a `## Next Steps` section to `BUILD_STATUS.md` so the Command Center surfaces XO Play's next steps
+- [docs] Reconciled `BACKLOG.md` — corrected "Up Next," moved finished batches to "Done"
+- [docs] Added `CHANGELOG.md` per the project-setup convention
+- [docs] Consolidated docs to the project-setup structure: moved planning docs into `docs/process/` (parent links fixed), added root `CLAUDE.md`, added `docs/design/DESIGN.md`; retired the legacy `documents/` folder (pending manual delete)

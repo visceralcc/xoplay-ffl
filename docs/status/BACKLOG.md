@@ -6,9 +6,8 @@ Open work tracked for the dashboard. Source of truth for spec completion is `BUI
 
 ## Up Next
 
-- 🔲 Step 6 — Batch 3 layout containers: Section / Stack / PageShell specs + components [ui] [spec]
-- 🔲 Step 7 — Batch 4 scoring & matchup component specs (CapMeter / TransactionRow / ScoreDisplay finalization) [ui] [spec]
-- 🔲 Step 8 — Batch 5 screen composition specs [ui] [spec]
+- 🔲 Write Batch 5 screen specs — RosterView / FranchiseHome / Standings / AddDrop [ui] [spec]
+- 🔲 Build Batch 5 screen compositions in preview [ui]
 
 ## Specs — Phase 3 (Surfaces)
 
@@ -42,7 +41,7 @@ Open work tracked for the dashboard. Source of truth for spec completion is `BUI
 
 ## Infrastructure
 
-- 🔲 Create XO Play Supabase project [infra] [blocked] — Blocks Stats Service Consumer Phase 1
+- 🔲 Create XO Play Supabase project — blocks Stats Service Consumer Phase 1 [infra] [blocked]
 - 🔲 Build Player + Stats tables with Data Model v0.2 schema (no migration; new project) [data] [infra]
 - 🔲 Implement Stats Service Consumer 4-phase build sequence once DB exists [data] [infra]
 
@@ -54,6 +53,11 @@ Open work tracked for the dashboard. Source of truth for spec completion is `BUI
 
 ## Done
 
+- ✅ Build CapMeter component [ui]
+- ✅ Build TransactionRow component [ui]
+- ✅ Sub-component — FranchiseHeader [ui]
+- ✅ Component Batch 4 — ScoreNum / ScoreDisplay / MatchupCard [ui]
+- ✅ Component Batch 3 — Card / Section / Stack / PageShell (+ GlobalNav / LeagueNav stubs) [ui]
 - ✅ `foundation/Spec_Navigation.md` — 4-layer nav, ~80 routes, per-screen data map [spec]
 - ✅ `foundation/Spec_StatsServiceConsumer.md` — 7 event subscriptions, ID mapping, 4-phase build [spec]
 - ✅ `roster/Spec_RosterManagement.md` — 9-check lineup validation, IR/taxi, 12 edge cases [spec]
