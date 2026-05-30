@@ -30,6 +30,7 @@ import { Section } from '@/components/Section';
 import { Stack } from '@/components/Stack';
 import { PageShell } from '@/components/PageShell';
 import { TransactionRow } from '@/components/TransactionRow';
+import { RosterView } from '@/screens/RosterView';
 import {
   franchises,
   getFranchiseById,
@@ -931,6 +932,35 @@ const REGISTRY: ComponentEntry[] = [
     // Standard/Compact segments toggles both header height and row density
     // because the same density value is passed to PlayerRow.
     render: () => <DataTableDemo />,
+  },
+  {
+    id: 'roster-view',
+    label: 'RosterView',
+    category: 'Screens',
+    backgroundColor: gray[100],
+    frameMode: 'phone',
+    defaultProps: {
+      franchiseId: 'fr-prt',
+    },
+    propControls: [
+      {
+        key: 'franchiseId',
+        type: 'select',
+        // fr-prt (default) is the only franchise with all three buckets
+        // populated (3 Active / 1 IR / 1 Taxi); fr-mia has empty IR + Taxi so
+        // the empty-state line is demonstrable. The rest round out the picker.
+        options: ['fr-prt', 'fr-mia', 'fr-oak', 'fr-bro', 'fr-san'],
+      },
+    ],
+    // Segment switching is interactive via RosterView's own state. Keying on
+    // franchiseId remounts the screen when the franchise changes so the bucket
+    // selection resets to Active.
+    render: (props) => (
+      <RosterView
+        key={props.franchiseId as string}
+        franchiseId={props.franchiseId as string}
+      />
+    ),
   },
 ];
 
