@@ -29,7 +29,14 @@ import { CapMeter } from '@/components/CapMeter';
 import { Section } from '@/components/Section';
 import { Stack } from '@/components/Stack';
 import { PageShell } from '@/components/PageShell';
-import { franchises, players, type Player } from '@/data/mockData';
+import { TransactionRow } from '@/components/TransactionRow';
+import {
+  franchises,
+  getFranchiseById,
+  players,
+  transactions,
+  type Player,
+} from '@/data/mockData';
 import type { InjuryStatus } from '@/theme';
 
 // Component preview system — see ~/.claude/skills/component-preview/SKILL.md.
@@ -825,6 +832,39 @@ const REGISTRY: ComponentEntry[] = [
         </Stack>
       );
     },
+  },
+  {
+    id: 'transaction-row',
+    label: 'TransactionRow',
+    category: 'Transactions',
+    backgroundColor: gray[0],
+    frameMode: 'naked',
+    componentWidth: 380,
+    defaultProps: {},
+    // The five mockData transactions stacked as a feed — exercises four
+    // distinct icons (ADD_DROP ↕, WAIVER_CLAIM ◆, TRADE_COMPLETED ⇄,
+    // IR_MOVE +), the franchise color dot per row, single-line truncation on
+    // the long trade description, and relative-time formatting.
+    render: () => (
+      <View>
+        {transactions.map((tx) => {
+          const f = getFranchiseById(tx.franchiseId);
+          return (
+            <TransactionRow
+              key={tx.id}
+              type={tx.type}
+              description={tx.details}
+              timestamp={tx.timestamp}
+              franchise={
+                f
+                  ? { abbreviation: f.abbreviation, primaryColor: f.primaryColor }
+                  : undefined
+              }
+            />
+          );
+        })}
+      </View>
+    ),
   },
   {
     id: 'data-table',
