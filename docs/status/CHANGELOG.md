@@ -4,6 +4,10 @@ All notable changes, logged per session. Tags: `[ui]` `[data]` `[infra]` `[spec]
 
 ---
 
+## 2026-05-31
+
+- [ui] Built `RosterView` — first Batch 5 screen composition (new `src/screens/`). Read-only roster surface composing `FranchiseHeader` masthead, an Active/IR/Taxi `SegmentControl` with per-bucket counts, and a compact roster table (`DataTable` header + `PlayerRow` body sharing one `ColumnDef[]`) filtered to the selected bucket; empty buckets render a `bodySm`/`gray-500` empty-state line. Dynasty column set (position, headshot, nameTeam, injury, salary, seasonTotal). Composes existing components unmodified. Preview entry under a new "Screens" category — phone frame, default `fr-prt`, franchise select including `fr-mia` for the empty-state demo
+
 ## 2026-05-30
 
 - [ui] Built `CapMeter` — salary cap usage bar with healthy / warning / over-cap states, optional labels + room text, and a bar-only `sm` variant; preview entry under a new "Cap" category with state/size controls and a full-state stack

@@ -1,14 +1,15 @@
 # XO Play — Build Status
 
-Last updated: 2026-05-30
+Last updated: 2026-05-31
 
 Feature map and completion tracker. Surfaced in the Command Center dashboard.
 Legend: ✅ Complete · 🔲 Not started / in progress
 
 ## Next Steps
 
-- Write the four Batch 5 screen specs: RosterView, FranchiseHome, Standings, AddDrop — all sub-component prerequisites are now built
-- Build the Batch 5 screen compositions in the component preview
+- RosterView screen composition is built (first of the four Batch 5 screens)
+- Build FranchiseHome — the next Batch 5 screen composition (depends on CapMeter + TransactionRow, both built)
+- Then build the remaining Batch 5 compositions: Standings, AddDrop
 - Then begin Phase 3 surface specs: Franchise, League, Commissioner screens
 
 ## Build Progress
