@@ -31,6 +31,7 @@ import { Stack } from '@/components/Stack';
 import { PageShell } from '@/components/PageShell';
 import { TransactionRow } from '@/components/TransactionRow';
 import { RosterView } from '@/screens/RosterView';
+import { FranchiseHome } from '@/screens/FranchiseHome';
 import {
   franchises,
   getFranchiseById,
@@ -957,6 +958,35 @@ const REGISTRY: ComponentEntry[] = [
     // selection resets to Active.
     render: (props) => (
       <RosterView
+        key={props.franchiseId as string}
+        franchiseId={props.franchiseId as string}
+      />
+    ),
+  },
+  {
+    id: 'franchise-home',
+    label: 'FranchiseHome',
+    category: 'Screens',
+    backgroundColor: gray[100],
+    frameMode: 'phone',
+    defaultProps: {
+      franchiseId: 'fr-bro',
+    },
+    propControls: [
+      {
+        key: 'franchiseId',
+        type: 'select',
+        // fr-bro (default) has a live matchup vs OAK, two transactions, and a
+        // near-cap meter. fr-san is in no matchup → This Week empty state.
+        // fr-mia has no transactions → Recent Activity empty state (and is
+        // over cap). fr-oak and fr-prt round out the picker.
+        options: ['fr-bro', 'fr-san', 'fr-mia', 'fr-oak', 'fr-prt'],
+      },
+    ],
+    // Keying on franchiseId remounts the screen when the franchise changes so
+    // the composition rebuilds cleanly against the new franchise.
+    render: (props) => (
+      <FranchiseHome
         key={props.franchiseId as string}
         franchiseId={props.franchiseId as string}
       />
