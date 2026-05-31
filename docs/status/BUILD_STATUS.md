@@ -7,9 +7,9 @@ Legend: ✅ Complete · 🔲 Not started / in progress
 
 ## Next Steps
 
-- RosterView screen composition is built (first of the four Batch 5 screens)
-- Build FranchiseHome — the next Batch 5 screen composition (depends on CapMeter + TransactionRow, both built)
-- Then build the remaining Batch 5 compositions: Standings, AddDrop
+- RosterView and FranchiseHome screen compositions are built (two of the four Batch 5 screens)
+- Build Standings — the next Batch 5 screen composition (third of four)
+- Then build the remaining Batch 5 composition: AddDrop
 - Then begin Phase 3 surface specs: Franchise, League, Commissioner screens
 
 ## Build Progress
