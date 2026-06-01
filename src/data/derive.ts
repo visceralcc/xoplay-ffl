@@ -6,8 +6,9 @@
 
 import { round1, round2 } from './rng';
 import { league } from './fixtures/league';
-import { franchises } from './fixtures/franchises';
+import { franchises, franchiseAbbreviations } from './fixtures/franchises';
 import { conferences, divisions } from './fixtures/structure';
+import { users } from './fixtures/identity';
 import { players } from './fixtures/players';
 import { contracts } from './fixtures/contracts';
 import { rosterEntries } from './fixtures/roster';
@@ -20,6 +21,7 @@ import type {
   CapUsage,
   Contract,
   Franchise,
+  FranchiseIdentity,
   LineupEntry,
   Player,
   RosterBucket,
@@ -27,6 +29,7 @@ import type {
   StandingsRow,
   Stats,
   Transaction,
+  User,
   WLT,
 } from './types';
 
@@ -43,6 +46,33 @@ export const getPlayerById = (id: string): Player | undefined =>
 
 export const getContractById = (id: string): Contract | undefined =>
   contracts.find((c) => c.id === id);
+
+export const getUserById = (id: string | null | undefined): User | undefined =>
+  id == null ? undefined : users.find((u) => u.id === id);
+
+// Display-ready franchise identity: abbreviation joined in and colors coalesced
+// to non-null, the shape FranchiseMark / FranchiseHeader / MatchupCard expect.
+// (Abbreviation is not a stored Franchise field per §4.5; colors are nullable
+// on the entity but always set in this fixture.)
+export function getFranchiseIdentity(
+  franchiseId: string,
+): FranchiseIdentity | undefined {
+  const f = getFranchiseById(franchiseId);
+  if (!f) return undefined;
+  return {
+    id: f.id,
+    name: f.name,
+    abbreviation:
+      franchiseAbbreviations[f.id] ?? f.id.replace(/^fr-/, '').toUpperCase(),
+    primaryColor: f.primaryColor ?? '#262626',
+    secondaryColor: f.secondaryColor ?? '#a0a0a0',
+  };
+}
+
+// Owner display name for a franchise's primary owner.
+export const getOwnerName = (franchiseId: string): string =>
+  getUserById(getFranchiseById(franchiseId)?.primaryOwnerUserId)?.displayName ??
+  '—';
 
 export const getStatsForPlayer = (playerId: string, week?: number): Stats[] =>
   stats.filter(
@@ -149,6 +179,10 @@ function tally(results: MatchResult[]): WLT {
 
 export const computeRecord = (franchiseId: string, season = SEASON): WLT =>
   tally(franchiseResults(franchiseId, season));
+
+// "8-2" when no ties, "6-3-1" when there are — the masthead record string.
+export const formatRecord = (r: WLT): string =>
+  r.ties > 0 ? `${r.wins}-${r.losses}-${r.ties}` : `${r.wins}-${r.losses}`;
 
 export const computePointsFor = (franchiseId: string, season = SEASON): number =>
   round2(

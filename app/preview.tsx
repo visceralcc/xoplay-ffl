@@ -35,14 +35,59 @@ import { FranchiseHome } from '@/screens/FranchiseHome';
 import { Standings } from '@/screens/Standings';
 import {
   franchises,
-  getFranchiseById,
-  players,
-  standings,
+  franchiseAbbreviations,
   transactions,
-  type Player,
+  computeCapUsage,
+  computePointsAgainst,
+  computePointsFor,
+  computeRecord,
+  computeStandings,
+  describeTransaction,
+  effectiveCap,
+  formatRecord,
+  getOwnerName,
+  getRosterByFranchise,
+  LEAGUE_ID,
+  type RosterRow,
   type TransactionType,
-} from '@/data/mockData';
+} from '@/data';
 import type { InjuryStatus } from '@/theme';
+
+// ─── preview data adapters ───────────────────────────────────────────────────
+// The component demos were written against the old flat mock (franchise rows
+// carrying record/pointsFor/capUsed and an abbreviation). The normalized
+// fixture computes those, so we project a display-shaped franchise array once
+// and the demos read it the same way they used to. Roster/standings demos use
+// the derive helpers directly.
+
+type DisplayFranchise = {
+  id: string;
+  name: string;
+  abbreviation: string;
+  primaryColor: string;
+  secondaryColor: string;
+  ownerName: string;
+  record: string;
+  pointsFor: number;
+  pointsAgainst: number;
+  capTotal: number;
+};
+
+const DISPLAY_FRANCHISES: DisplayFranchise[] = franchises.map((f) => ({
+  id: f.id,
+  name: f.name,
+  abbreviation: franchiseAbbreviations[f.id] ?? f.id.replace(/^fr-/, '').toUpperCase(),
+  primaryColor: f.primaryColor ?? gray[800],
+  secondaryColor: f.secondaryColor ?? gray[400],
+  ownerName: getOwnerName(f.id),
+  record: formatRecord(computeRecord(f.id)),
+  pointsFor: computePointsFor(f.id),
+  pointsAgainst: computePointsAgainst(f.id),
+  capTotal: effectiveCap(f.id),
+}));
+
+const displayFranchiseById = (id: string): DisplayFranchise | undefined =>
+  DISPLAY_FRANCHISES.find((f) => f.id === id);
 
 // Component preview system — see ~/.claude/skills/component-preview/SKILL.md.
 // Web-only design tool. Routes inherit fonts loaded by app/_layout.tsx, so
@@ -128,18 +173,18 @@ const ROSTER_COLUMNS: Array<{
   { key: 'seasonTotal', label: 'Total', width: 64, align: 'right', sortable: true },
 ];
 
-function sortPlayers(
-  arr: Player[],
+function sortRows(
+  arr: RosterRow[],
   key: string,
   dir: 'asc' | 'desc',
-): Player[] {
+): RosterRow[] {
   const copy = [...arr];
   copy.sort((a, b) => {
     let cmp = 0;
-    if (key === 'nameTeam') cmp = a.lastName.localeCompare(b.lastName);
-    else if (key === 'position') cmp = a.position.localeCompare(b.position);
-    else if (key === 'salary') cmp = a.salary - b.salary;
-    else if (key === 'seasonTotal') cmp = a.seasonTotal - b.seasonTotal;
+    if (key === 'nameTeam') cmp = a.player.lastName.localeCompare(b.player.lastName);
+    else if (key === 'position') cmp = a.player.position.localeCompare(b.player.position);
+    else if (key === 'salary') cmp = (a.contract?.baseSalary ?? 0) - (b.contract?.baseSalary ?? 0);
+    else if (key === 'seasonTotal') cmp = a.seasonPoints - b.seasonPoints;
     return dir === 'asc' ? cmp : -cmp;
   });
   return copy;
@@ -182,15 +227,15 @@ function DataTableDemo() {
 
   // Slice to 8 rows so the canvas stays a reasonable height; the table
   // mechanics are the point, not the full roster.
-  const data = sortPlayers(players.slice(0, 8), sortKey, sortDir);
+  const data = sortRows(getRosterByFranchise('fr-bro').slice(0, 8), sortKey, sortDir);
 
   return (
-    <DataTable<Player>
-      columns={ROSTER_COLUMNS as DataTableColumn<Player>[]}
+    <DataTable<RosterRow>
+      columns={ROSTER_COLUMNS as DataTableColumn<RosterRow>[]}
       data={data}
-      renderRow={(player) => (
+      renderRow={(row) => (
         <PlayerRow
-          player={player}
+          row={row}
           density={density}
           columns={ROSTER_COLUMNS}
         />
@@ -331,7 +376,7 @@ const REGISTRY: ComponentEntry[] = [
     ],
     render: (props) => {
       const abbr = props.franchise as string;
-      const match = franchises.find((f) => f.abbreviation === abbr);
+      const match = DISPLAY_FRANCHISES.find((f) => f.abbreviation === abbr);
       // Mock data is the source of truth here; the component only needs the
       // colors and abbreviation to pick its mark.
       const franchise = match ?? {
@@ -407,9 +452,9 @@ const REGISTRY: ComponentEntry[] = [
     ],
     render: (props) => {
       const abbr = props.franchise as string;
-      const match = franchises.find((f) => f.abbreviation === abbr);
+      const match = DISPLAY_FRANCHISES.find((f) => f.abbreviation === abbr);
       // Fallback keeps the preview alive if the selector is ever pointed at
-      // a franchise that's been removed from mockData — uses §8.6 generic.
+      // a franchise that's been removed from the fixture — uses §8.6 generic.
       const franchise = match ?? {
         name: 'Generic Franchise',
         abbreviation: abbr,
@@ -454,10 +499,10 @@ const REGISTRY: ComponentEntry[] = [
     render: (props) => {
       const status = props.status as 'upcoming' | 'live' | 'final';
       const variant = props.variant as 'standard' | 'compact';
-      const oak = franchises.find((f) => f.abbreviation === 'OAK')!;
-      const mia = franchises.find((f) => f.abbreviation === 'MIA')!;
-      const bro = franchises.find((f) => f.abbreviation === 'BRO')!;
-      const san = franchises.find((f) => f.abbreviation === 'SAN')!;
+      const oak = DISPLAY_FRANCHISES.find((f) => f.abbreviation === 'OAK')!;
+      const mia = DISPLAY_FRANCHISES.find((f) => f.abbreviation === 'MIA')!;
+      const bro = DISPLAY_FRANCHISES.find((f) => f.abbreviation === 'BRO')!;
+      const san = DISPLAY_FRANCHISES.find((f) => f.abbreviation === 'SAN')!;
       return (
         <Stack gap={spacing.lg}>
           <MatchupCard
@@ -551,24 +596,30 @@ const REGISTRY: ComponentEntry[] = [
     propControls: [
       { key: 'density', type: 'select', options: ['standard', 'compact'] },
     ],
-    // Picks four players that exercise the spec's interesting cases:
-    // a HEALTHY QB (no indicator), a QUESTIONABLE RB (Q badge), a DOUBTFUL
-    // WR (D badge), and an IR DE (IR badge — two-letter variant).
+    // Picks roster rows that exercise the injury-indicator cases: a healthy
+    // starter (no indicator), a non-healthy active player (Q/D/O badge), and an
+    // IR player (IR badge — two-letter variant). Falls back to the first rows
+    // if a category isn't present for this franchise.
     render: (props) => {
-      const ids = [
-        'plr-davis-carter',
-        'plr-deshaun-williams',
-        'plr-andre-ortiz',
-        'plr-anton-givens',
-      ];
-      const rows = ids
-        .map((id) => players.find((p) => p.id === id))
-        .filter((p): p is (typeof players)[number] => p != null);
+      const roster = getRosterByFranchise('fr-bro');
+      const firstWhere = (pred: (r: RosterRow) => boolean) =>
+        roster.find(pred);
+      const picks = [
+        firstWhere((r) => r.bucket === 'ACTIVE' && r.injuryStatus === 'HEALTHY'),
+        firstWhere(
+          (r) =>
+            r.bucket === 'ACTIVE' &&
+            ['QUESTIONABLE', 'DOUBTFUL', 'OUT'].includes(r.injuryStatus),
+        ),
+        firstWhere((r) => r.bucket === 'INJURED_RESERVE'),
+        firstWhere((r) => r.bucket === 'TAXI_SQUAD'),
+      ].filter((r): r is RosterRow => r != null);
+      const rows = picks.length > 0 ? picks : roster.slice(0, 4);
       const density = props.density as 'standard' | 'compact';
       return (
         <View>
-          {rows.map((player) => (
-            <PlayerRow key={player.id} player={player} density={density} />
+          {rows.map((row) => (
+            <PlayerRow key={row.player.id} row={row} density={density} />
           ))}
         </View>
       );
@@ -698,7 +749,7 @@ const REGISTRY: ComponentEntry[] = [
     frameMode: 'phone',
     defaultProps: {},
     render: () => {
-      const oakland = franchises.find((f) => f.abbreviation === 'OAK');
+      const oakland = DISPLAY_FRANCHISES.find((f) => f.abbreviation === 'OAK');
       return (
         <PageShell
           leagueName={oakland?.name ?? 'Oakdale Timberwolves'}
@@ -759,7 +810,7 @@ const REGISTRY: ComponentEntry[] = [
     // cream (gets the gray-300 border), and deep purple — in one shot.
     render: () => (
       <Stack gap={spacing.md}>
-        {franchises.map((f) => (
+        {DISPLAY_FRANCHISES.map((f) => (
           <FranchiseHeader
             key={f.id}
             franchise={f}
@@ -794,13 +845,13 @@ const REGISTRY: ComponentEntry[] = [
       { key: 'showLabels', type: 'toggle' },
       { key: 'showRoom', type: 'toggle' },
     ],
-    // capTotal is the real Dynasty cap ($222.75) from mockData; capUsed is
+    // capTotal is the real Dynasty cap ($222.75) from the fixture; capUsed is
     // derived from the selected state so the control sweeps healthy (75%),
     // warning (92%), and over-cap (105%). The static stack beneath the
     // interactive meter shows all three full-size states plus the bar-only
     // small variant at once (Spec §4.6 done-criteria).
     render: (props) => {
-      const capTotal = franchises[0].capTotal;
+      const capTotal = DISPLAY_FRANCHISES[0].capTotal;
       const pctByState: Record<string, number> = {
         'under-cap': 0.75,
         'near-cap': 0.92,
@@ -894,15 +945,15 @@ const REGISTRY: ComponentEntry[] = [
         ...transactions.map((tx) => ({
           id: tx.id,
           type: tx.type,
-          timestamp: tx.timestamp,
-          details: tx.details,
-          franchiseId: tx.franchiseId,
+          timestamp: tx.occurredAt,
+          details: describeTransaction(tx),
+          franchiseId: tx.initiatedByFranchiseId ?? undefined,
         })),
       ];
       return (
         <View>
           {rows.map((tx) => {
-            const f = tx.franchiseId ? getFranchiseById(tx.franchiseId) : undefined;
+            const f = tx.franchiseId ? displayFranchiseById(tx.franchiseId) : undefined;
             return (
               <TransactionRow
                 key={tx.id}
@@ -1001,14 +1052,16 @@ const REGISTRY: ComponentEntry[] = [
     backgroundColor: gray[100],
     frameMode: 'phone',
     // League-wide and tier-agnostic, so no franchise/tier select. The `empty`
-    // toggle swaps the full mock standings (all five franchises, ranks 1–5,
-    // BRO → OAK → MIA → SAN → PRT) for `[]` to exercise the empty state.
+    // toggle swaps the computed league standings (all eight franchises) for `[]`
+    // to exercise the empty state.
     defaultProps: {
       empty: false,
     },
     propControls: [{ key: 'empty', type: 'toggle' }],
     render: (props) => (
-      <Standings entries={(props.empty as boolean) ? [] : standings} />
+      <Standings
+        entries={(props.empty as boolean) ? [] : computeStandings(LEAGUE_ID)}
+      />
     ),
   },
 ];

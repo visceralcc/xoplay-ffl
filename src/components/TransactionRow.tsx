@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { gray, spacing, type as typo } from '@/theme';
-import type { TransactionType } from '@/data/mockData';
+import type { TransactionType } from '@/data';
 import { Mono } from './Mono';
 
 // Single transaction in a feed — the building block of Recent Transactions on

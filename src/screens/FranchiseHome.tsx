@@ -6,17 +6,27 @@ import { CapMeter } from '@/components/CapMeter';
 import { Section } from '@/components/Section';
 import { TransactionRow } from '@/components/TransactionRow';
 import {
-  getFranchiseById,
+  CURRENT_WEEK_NUMBER,
+  computeCapUsage,
+  computePointsAgainst,
+  computePointsFor,
+  computeRecord,
+  describeTransaction,
+  effectiveCap,
+  formatRecord,
+  getFranchiseIdentity,
+  getOwnerName,
+  getTransactionsByFranchise,
   matchups,
-  transactions,
   type MatchupStatus,
-} from '@/data/mockData';
+} from '@/data';
 
 // FranchiseHome — Batch 5 screen composition for the Franchise Overview surface
 // (Navigation "Franchise Home", /:leagueSlug/my-team). Read-only: franchise
 // masthead, this week's MatchupCard, a tier-gated salary-cap snapshot, and a
-// recent-activity feed. Composes the existing design-system components
-// unmodified. Spec: specs/franchise/screens/Screen_FranchiseHome.md.
+// recent-activity feed. Sourced from the normalized fixture via derive helpers.
+// Composes the existing design-system components unmodified. Spec:
+// specs/franchise/screens/Screen_FranchiseHome.md.
 
 type FranchiseHomeProps = {
   franchiseId: string;
@@ -32,7 +42,7 @@ const STATUS_MAP: Record<MatchupStatus, 'live' | 'final' | 'upcoming'> = {
 };
 
 export function FranchiseHome({ franchiseId }: FranchiseHomeProps) {
-  const franchise = getFranchiseById(franchiseId);
+  const franchise = getFranchiseIdentity(franchiseId);
 
   if (!franchise) {
     return (
@@ -42,39 +52,35 @@ export function FranchiseHome({ franchiseId }: FranchiseHomeProps) {
     );
   }
 
-  // Current-week matchup: first matchup the franchise appears in, either side
-  // (Spec "Current matchup lookup"). Both sides are resolved so MatchupCard can
-  // render away-left / home-right straight from the record — not re-oriented.
+  // Current-week matchup for this franchise (Spec "Current matchup lookup").
+  // Both sides resolve to identities so MatchupCard renders away-left /
+  // home-right straight from the record.
   const matchup = matchups.find(
     (m) =>
-      m.homeFranchiseId === franchiseId || m.awayFranchiseId === franchiseId,
+      m.week === CURRENT_WEEK_NUMBER &&
+      (m.homeFranchiseId === franchiseId || m.awayFranchiseId === franchiseId),
   );
-  const awayFranchise = matchup
-    ? getFranchiseById(matchup.awayFranchiseId)
+  const awayFranchise = matchup?.awayFranchiseId
+    ? getFranchiseIdentity(matchup.awayFranchiseId)
     : undefined;
   const homeFranchise = matchup
-    ? getFranchiseById(matchup.homeFranchiseId)
+    ? getFranchiseIdentity(matchup.homeFranchiseId)
     : undefined;
   const hasMatchup = matchup && awayFranchise && homeFranchise;
 
-  // This franchise's transactions, newest first (Spec "Transaction feed").
-  const franchiseTransactions = transactions
-    .filter((t) => t.franchiseId === franchiseId)
-    .sort(
-      (a, b) =>
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-    );
+  // This franchise's transactions, newest first (helper already sorts).
+  const franchiseTransactions = getTransactionsByFranchise(franchiseId);
 
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <FranchiseHeader
           franchise={franchise}
-          ownerName={franchise.ownerName}
-          record={franchise.record}
+          ownerName={getOwnerName(franchiseId)}
+          record={formatRecord(computeRecord(franchiseId))}
           tierLabel="DYNASTY · SALARY · CONTRACT"
-          pointsFor={franchise.pointsFor.toFixed(2)}
-          pointsAgainst={franchise.pointsAgainst.toFixed(2)}
+          pointsFor={computePointsFor(franchiseId).toFixed(2)}
+          pointsAgainst={computePointsAgainst(franchiseId).toFixed(2)}
         />
 
         <View style={styles.regions}>
@@ -83,13 +89,13 @@ export function FranchiseHome({ franchiseId }: FranchiseHomeProps) {
               <MatchupCard
                 awayTeam={{
                   franchise: awayFranchise,
-                  score: matchup.awayScore.toFixed(2),
+                  score: (matchup.awayScore ?? 0).toFixed(2),
                 }}
                 homeTeam={{
                   franchise: homeFranchise,
-                  score: matchup.homeScore.toFixed(2),
+                  score: (matchup.homeScore ?? 0).toFixed(2),
                 }}
-                weekNumber={matchup.weekNumber}
+                weekNumber={matchup.week}
                 status={STATUS_MAP[matchup.status]}
               />
             ) : (
@@ -102,8 +108,8 @@ export function FranchiseHome({ franchiseId }: FranchiseHomeProps) {
               entirely. The preview is Dynasty, so it always renders here. */}
           <Section title="Salary Cap">
             <CapMeter
-              capUsed={franchise.capUsed}
-              capTotal={franchise.capTotal}
+              capUsed={computeCapUsage(franchiseId)}
+              capTotal={effectiveCap(franchiseId)}
               size="md"
             />
           </Section>
@@ -116,8 +122,8 @@ export function FranchiseHome({ franchiseId }: FranchiseHomeProps) {
                 <TransactionRow
                   key={tx.id}
                   type={tx.type}
-                  description={tx.details}
-                  timestamp={tx.timestamp}
+                  description={describeTransaction(tx)}
+                  timestamp={tx.occurredAt}
                 />
               ))
             ) : (

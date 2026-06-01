@@ -379,6 +379,16 @@ export type RosterRow = {
 
 export type WLT = { wins: number; losses: number; ties: number };
 
+// Display-ready franchise identity (abbreviation joined, colors non-null) for
+// FranchiseMark / FranchiseHeader / MatchupCard inputs.
+export type FranchiseIdentity = {
+  id: string;
+  name: string;
+  abbreviation: string;
+  primaryColor: string;
+  secondaryColor: string;
+};
+
 // One computed standings row (replaces the old hand-typed StandingsEntry).
 export type StandingsRow = {
   rank: number;

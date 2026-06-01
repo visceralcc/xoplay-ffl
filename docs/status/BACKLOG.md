@@ -6,8 +6,16 @@ Open work tracked for the dashboard. Source of truth for spec completion is `BUI
 
 ## Up Next
 
-- 🔲 Write Batch 5 screen specs — RosterView / FranchiseHome / Standings / AddDrop [ui] [spec]
-- 🔲 Build Batch 5 screen compositions in preview [ui]
+- 🔲 Write the one-page placeholder render convention (so screen builds stop making per-screen design micro-decisions) [ui] [docs]
+- 🔲 Stamp screens area by area off Navigation §6 — start with Franchise + League (unlocked by the foundation fixture), reviewed on data-completeness [ui]
+- 🔲 Extend the fixture per area (transactions / draft / auction / social / accounting / playoffs / notifications / audit) as each area's screens are built [data]
+- 🔲 AddDrop + remaining transaction screens — now built as part of the Transactions area, not a standalone "Batch 5" screen [ui]
+
+## Patterns / Tech Debt
+
+- 🔲 Apply the config-driven column pattern (one config + one shared layout fn for header & rows) to RosterView and future tables [ui]
+- 🔲 `computeStandings` should read `League.standingsTiebreakerChain` instead of a hardcoded sort order — fold into the real standings logic [data]
+- 🔲 `computeCapUsage` sums contracts only until `SalaryAdjustment` is added to the fixture [data]
 
 ## Specs — Phase 3 (Surfaces)
 
@@ -44,6 +52,7 @@ Open work tracked for the dashboard. Source of truth for spec completion is `BUI
 - 🔲 Create XO Play Supabase project — blocks Stats Service Consumer Phase 1 [infra] [blocked]
 - 🔲 Build Player + Stats tables with Data Model v0.2 schema (no migration; new project) [data] [infra]
 - 🔲 Implement Stats Service Consumer 4-phase build sequence once DB exists [data] [infra]
+- 🔲 Wire screens to real Supabase data once tables exist (mechanical swap — fixture already matches the schema) [data] [infra]
 
 ## Documentation
 
@@ -53,6 +62,14 @@ Open work tracked for the dashboard. Source of truth for spec completion is `BUI
 
 ## Done
 
+- ✅ Config-driven Standings columns — header/row alignment + full franchise names [ui] [fix]
+- ✅ Rewire PlayerRow (RosterRow view model) + RosterView / FranchiseHome / Standings to the normalized fixture; delete mockData shim [data] [ui]
+- ✅ Normalized schema-shaped data fixture + derived helpers (`src/data/` module) [data]
+- ✅ `foundation/Spec_MockFixture.md` — normalized-fixture buildable unit [spec]
+- ✅ Build Standings — third composition screen [ui]
+- ✅ `league/screens/Screen_Standings.md` — third Batch 5 screen spec [spec]
+- ✅ Build RosterView + FranchiseHome screen compositions [ui]
+- ✅ `roster/screens/Screen_RosterView.md` + `franchise/screens/Screen_FranchiseHome.md` [spec]
 - ✅ Build CapMeter component [ui]
 - ✅ Build TransactionRow component [ui]
 - ✅ Sub-component — FranchiseHeader [ui]
@@ -74,6 +91,5 @@ Open work tracked for the dashboard. Source of truth for spec completion is `BUI
 - ✅ `Spec_XOPlay_PRD.md` — 26-section master product architecture [spec]
 - ✅ Expo scaffold + fonts + tokens (Step 1) [infra]
 - ✅ Component preview system (Step 2) [infra]
-- ✅ Mock data (Step 3) [infra]
 - ✅ Component Batch 1 — Label / Mono / PositionBadge / InjuryIndicator / Headshot / FranchiseMark / LiveDot / StatValue [ui]
 - ✅ Component Batch 2 — SegmentControl / PlayerRow / DataTable [ui]

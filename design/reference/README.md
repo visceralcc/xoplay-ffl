@@ -57,4 +57,4 @@ The showcase is a self-contained HTML file that loads React + Babel from unpkg a
 
 ---
 
-*Source: Claude Design exploration, April 2026. Creative brief in `uploads/Prompt_DesignSystem_CreativeBrief.md`.*
+*Source: Claude Design exploration, April 2026. Creative brief in `docs/process/Prompt_DesignSystem_CreativeBrief.md`.*

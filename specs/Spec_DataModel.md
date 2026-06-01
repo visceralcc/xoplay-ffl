@@ -10,8 +10,8 @@ Version 0.1 | April 2026 | Charlie Denison | XO Play (xoplay.co)
 
 **Status:** Draft
 **Parent:** [Spec_XOPlay_PRD.md](../Spec_XOPlay_PRD.md) (especially §3–§17 for entity definitions and §20 for data model summary)
-**Related specs:** `foundation/Spec_Tiers.md`, `scoring/Spec_ScoringEngine.md`, `salary-cap/Spec_ContractsAndCap.md`, `transactions/Spec_TransactionEngine.md`
-**Last updated:** April 2026
+**Related specs:** `foundation/Spec_Tiers.md`, `foundation/Spec_StatsServiceConsumer.md`, `scoring/Spec_ScoringEngine.md`, `salary-cap/Spec_ContractsAndCap.md`, `transactions/Spec_TransactionEngine.md`
+**Last updated:** May 2026
 
 ---
 
@@ -20,6 +20,7 @@ Version 0.1 | April 2026 | Charlie Denison | XO Play (xoplay.co)
 | Version | Date | Changes |
 |---------|------|---------|
 | 0.1 | Apr 2026 | Initial consolidation. All entities from PRD §3–§17 gathered into a single reference, with join entities, JSON field shapes, cross-entity constraints, and enum tables added. |
+| 0.2 | May 2026 | Updated Player (§4.9) and Stats (§4.10) entities for NFL Stats Service Consumer architecture. Added `statsServicePlayerId`, `isReconciled`. Removed `headshotUrl`. Redefined `externalId`. Updated data source references from sportsdata.io to NFL Stats Service. See `foundation/Spec_StatsServiceConsumer.md`. |
 
 ---
 
@@ -45,7 +46,7 @@ Every entity's primary key is a UUID (v4). No auto-incrementing integers, no nat
 
 **Why.** UUIDs allow records to be created client-side before server round-trip (useful for optimistic UI), allow sharding without coordination, and prevent ID collisions across environments (dev/staging/prod).
 
-**Exception.** External IDs from sportsdata.io are stored as strings in an `externalId` field alongside the internal UUID — never used as the primary key. Draft pick `overallNumber`, season year, round, and similar derived identifiers are stored as integers for convenience but are not primary keys.
+**Exception.** External IDs from the NFL Stats Service (nflverse `gsis_id` values) are stored as strings in an `externalId` field alongside the internal UUID — never used as the primary key. A separate `statsServicePlayerId` (UUID) links each feed-backed Player to the Stats Service's canonical record. Draft pick `overallNumber`, season year, round, and similar derived identifiers are stored as integers for convenience but are not primary keys.
 
 ### 2.2 Timestamps are UTC with timezone, stored to the second
 
@@ -93,7 +94,7 @@ The following are *configuration fields* on existing entities, not separate enti
 | Playoff format | Fields | `League` (for defaults) + `PlayoffBracket` (per-bracket overrides) | Brackets are the entity; format is configuration |
 | Franchise abilities | JSON field `abilities` | `Franchise` | Small, fixed set of boolean flags; no need for a normalized permission table |
 | League bylaws | Free text on `League` OR structured doc (future) | `League` | See PRD Gap §3.7 — structured bylaws are a v2 feature |
-| Injury status | Field on `Player` | `Player` | Current status only; history is in sportsdata.io, not our system |
+| Injury status | Field on `Player` | `Player` | Current status only; history is in the NFL Stats Service, not our system |
 
 Conversely, these *do* become entities because they have independent lifecycle, foreign keys pointing at them, or audit/history requirements: `Contract`, `SalaryAdjustment`, `RookieSalaryScale`, `PayoutStructure`, `CalendarEvent`, `ScoringRule`, `Notification`, `Invitation`.
 
@@ -672,14 +673,15 @@ A pending invitation to join a Franchise. Exists between invite creation and acc
 
 ### 4.9 Player
 
-The NFL player. Sourced from sportsdata.io; cached/mirrored in XO Play.
+The NFL player. Sourced from the NFL Stats Service (see `foundation/Spec_StatsServiceConsumer.md`); cached/mirrored in XO Play.
 
 **PRD reference:** §5.1
 
 | Field | Type | ? | Notes |
 |---|---|---|---|
 | `id` | UUID | | |
-| `externalId` | string | ? | sportsdata.io player ID; null for custom players |
+| `statsServicePlayerId` | UUID | ? | FK to NFL Stats Service `Player.id`. Null for custom players (`isCustom = true`). Set at initial sync or custom-player merge. |
+| `externalId` | string | ? | nflverse `gsis_id` (sourced via NFL Stats Service). Null for custom players. |
 | `isCustom` | bool | | True for commissioner-created pre-release rookies, etc. |
 | `firstName` | string | | |
 | `lastName` | string | | |
@@ -693,8 +695,7 @@ The NFL player. Sourced from sportsdata.io; cached/mirrored in XO Play.
 | `collegeName` | string | ? | |
 | `injuryStatus` | enum | | See §5 — current status only |
 | `isActive` | bool | | NFL-active vs retired/cut |
-| `headshotUrl` | string | ? | |
-| `lastSyncedAt` | timestamp | | Last sportsdata.io sync |
+| `lastSyncedAt` | timestamp | | Last sync from NFL Stats Service |
 
 **Relationships:**
 - Has many `Contract` (across leagues, past and current)
@@ -703,16 +704,20 @@ The NFL player. Sourced from sportsdata.io; cached/mirrored in XO Play.
 
 **Constraints:**
 - `externalId` unique when not null
+- `statsServicePlayerId` unique when not null
 - `externalId = null` implies `isCustom = true`
-- Custom player merge (PRD §22.17) unifies a custom player into an externalId-backed player: the custom record's Contract/Roster references are re-pointed to the merged record; the custom record is soft-deleted.
+- `statsServicePlayerId = null` implies `isCustom = true`
+- Custom player merge (PRD §22.17) unifies a custom player into a feed-backed player: sets `statsServicePlayerId` on the surviving record, re-points all Contract/Roster references from the custom record to the merged record, and soft-deletes the custom record with `mergedIntoPlayerId`.
 
-**Note on position changes.** Position is authoritative from sportsdata.io. When it changes, the `Player.position` field updates on next sync. Historical position-at-time-of-transaction is captured in `Transaction` records (see §4.18) so reports can show "drafted as DE, now DT."
+**Note on position changes.** Position is authoritative from the NFL Stats Service. When it changes (via `PLAYER_UPDATED` event), the `Player.position` field updates. Historical position-at-time-of-transaction is captured in `Transaction` records (see §4.18) so reports can show "drafted as DE, now DT."
+
+**Note on headshotUrl.** Removed in v1 — no player headshots without NFLPA license. May be reintroduced in a future version if licensing is secured.
 
 ---
 
 ### 4.10 Stats
 
-A player's weekly statistical line. One row per player per league week per season. Sourced from sportsdata.io.
+A player's weekly statistical line. One row per player per league week per season. Sourced from the NFL Stats Service via `STATS_UPDATED` and `STATS_CORRECTED` events (see `foundation/Spec_StatsServiceConsumer.md` §3.1, §3.2).
 
 **PRD reference:** §6 (scoring depends on this), §23.1
 
@@ -723,7 +728,8 @@ A player's weekly statistical line. One row per player per league week per seaso
 | `seasonYear` | int | | |
 | `week` | int | | 1–22 (covering regular season + playoffs) |
 | `statValues` | JSON | | Map of `statType` (see §5) → numeric value |
-| `sourceVersion` | int | | Incremented on each correction from sportsdata.io |
+| `sourceVersion` | int | | Incremented on each correction from the NFL Stats Service |
+| `isReconciled` | bool | | Default false. Set to true after Thursday authoritative data is applied via `STATS_CORRECTED` event. |
 | `lastCorrectionAt` | timestamp | ? | |
 
 **Relationships:**

@@ -3,7 +3,7 @@
 **This document defines the feature folder structure for the XO Play docs pyramid.** It maps every Level 2 spec and anticipated Level 3 buildable unit to its home in the file tree. Use it as the index when creating new spec files — if a doc doesn't have a home here, either add it or question whether it's needed.
 
 **Status:** Draft
-**Parent:** [Spec_XOPlay_PRD.md](./Spec_XOPlay_PRD.md), [Templates_SpecDocs.md](./Templates_SpecDocs.md)
+**Parent:** [Spec_XOPlay_PRD.md](../../specs/Spec_XOPlay_PRD.md), [Templates_SpecDocs.md](../../specs/Templates_SpecDocs.md)
 **Last updated:** May 2026
 
 ---
@@ -21,7 +21,9 @@ docs/
 │   ├── Spec_DataModel.md
 │   ├── Spec_Tiers.md
 │   ├── Spec_DesignSystem.md
-│   └── Spec_Navigation.md
+│   ├── Spec_Navigation.md
+│   ├── Spec_StatsServiceConsumer.md
+│   └── Spec_MockFixture.md         ← normalized mock fixture (mirrors Data Model; feeds all screens)
 │
 ├── scoring/
 │   ├── Spec_ScoringEngine.md
@@ -103,6 +105,7 @@ docs/
 ├── roster/
 │   ├── Spec_RosterManagement.md
 │   ├── screens/
+│   │   ├── Screen_RosterView.md
 │   │   ├── Screen_RosterEdit.md
 │   │   ├── Screen_LineupSubmit.md
 │   │   └── Screen_RosterCompliance.md
@@ -251,13 +254,14 @@ Four specs that don't belong to any single feature but are referenced by everyth
 | **Spec_DataModel.md** | Canonical entity definitions. Every Tech Spec references this for its entities rather than redefining them. Contains the full entity list, relationships, field types, and constraints. |
 | **Spec_Tiers.md** | Short but load-bearing. Defines what Redraft / Keeper / Dynasty each turn on and off. Every Design Spec references this for its tier variations. |
 | **Spec_DesignSystem.md** | Tokens (colors, spacing, typography), shared components, responsive patterns. Every screen and component references this. |
+| **Spec_StatsServiceConsumer.md** | XO Play's contract with the standalone NFL Stats Service. Event subscriptions, player ID mapping, event handlers, data model deltas. Replaces the retired `Spec_StatsService.md`. |
 | **Spec_Navigation.md** | The information architecture — what screens exist, how they connect, the global navigation model. This is the map of the UI. Every screen doc references this for where it sits in the app. |
 
 ### scoring/ vs. live-scoring/
 
 Separate because they're different systems with different infrastructure:
 - **scoring/** is the formula engine. Batch, retroactive, stateless. Built in Phase 1.
-- **live-scoring/** is the real-time pipeline. Polling, WebSocket, Gameday UI. Built in Phase 5.
+- **live-scoring/** is the real-time pipeline. Polling, WebSocket, Gameday UI. Built in Phase 5. The Stats Service Consumer (`foundation/Spec_StatsServiceConsumer.md`) defines how stat events enter XO Play; the live-scoring spec defines how computed scores reach end users.
 
 The scoring engine doesn't know about WebSockets; the live scoring pipeline calls the scoring engine but adds real-time delivery on top.
 
@@ -298,7 +302,7 @@ Its own folder because the bracket system is self-contained — seeding logic, b
 
 | Considered | Decision | Reason |
 |---|---|---|
-| **Players** | No folder. Player entity lives in `foundation/Spec_DataModel.md`. Player-related UI (search, news, profile) is split across the features that use it. | There's no "player management" system — players are consumed by roster, transactions, draft, etc. |
+| **Players** | No folder. Player entity lives in `foundation/Spec_DataModel.md`. Player data sync lives in `foundation/Spec_StatsServiceConsumer.md`. Player-related UI (search, news, profile) is split across the features that use it. | There's no "player management" system — players are consumed by roster, transactions, draft, etc. The Stats Service Consumer handles data flow; it's not a standalone feature folder because it's foundational infrastructure. |
 | **Permissions** | No folder. Abilities matrix lives in `commissioner/`. Auth lives in `foundation/Spec_DataModel.md` (User entity). | Not enough standalone logic to justify its own feature boundary. |
 | **IR/Taxi** | Part of `roster/`, not its own folder. | IR and Taxi are roster bucket transitions, not independent systems. The logic and screen live in `roster/`. |
 | **Standardized Variants** | No folder yet. Post-v1. When needed, it'll get a `variants/` folder. | Not in scope for v1 per PRD §21.7. |

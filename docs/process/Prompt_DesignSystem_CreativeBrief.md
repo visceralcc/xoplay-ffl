@@ -1,5 +1,7 @@
 # Creative Brief: XO Play Design System Exploration
 
+> **⚠️ DEPRECATED — historical reference only.** This brief fed the Claude Design exploration that was rejected. The design system is now being built bottom-up in code (see `Prompt_DesignSystem_BuildSequence.md`). Notably stale: it lists a "Spectator (read-only, no login)" role, but XO Play has since decided **all pages require authentication — no spectator view**.
+
 ## What is XO Play?
 
 XO Play (xoplay.co) is a fantasy football platform with three complexity tiers — Redraft (simple), Keeper (moderate), and Dynasty (advanced). It sits between ESPN/Yahoo (too simple) and MyFantasyLeague (powerful but ugly and manual). The differentiator is AI-generated "team newspaper" editorial content that makes fantasy teams feel alive — but the core platform must be excellent on its own.

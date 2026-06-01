@@ -3,7 +3,7 @@
 **Status:** Draft
 **Parent specs:** [Spec_DesignSystem.md](../../Spec_DesignSystem.md) §4.2, §4.5, §5
 **Type:** Component
-**Last updated:** May 2026
+**Last updated:** May 2026 (rev: RosterRow view-model prop)
 
 ---
 
@@ -15,10 +15,14 @@ The single most reused element in the product. A horizontal row displaying a pla
 
 | Prop | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
-| `player` | `MockPlayer` | Yes | — | Player data object from mockData types. |
+| `row` | `RosterRow` | Yes | — | Joined roster view model from the data layer (`getRosterByFranchise`): player identity + contract + computed season / last-week points + roster bucket + injury. Replaces the former flattened `MockPlayer` prop. |
 | `density` | `'standard' \| 'compact'` | No | `'standard'` | Row height mode. |
 | `columns` | `ColumnDef[]` | No | Default set | Which data columns to show and in what order. |
 | `onPress` | `() => void` | No | — | Tap handler for row selection/expansion. |
+
+## Data source
+
+PlayerRow reads a roster **view model** assembled by the data-layer helpers (`getRosterByFranchise` in `src/data`), not a flat player object. Salary and contract years come from the joined `Contract`; season and last-week points are computed from `Stats` × scoring rules; bucket and injury come off the `RosterEntry` / `Player`. None of these are stored on a flat player — see `foundation/Spec_MockFixture.md`.
 
 ## Visual rules
 

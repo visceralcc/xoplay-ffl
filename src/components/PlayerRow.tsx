@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { fontFamily, gray, spacing, type as typo } from '@/theme';
-import type { Player } from '@/data/mockData';
+import type { InjuryStatus, RosterRow } from '@/data';
 import { Headshot } from './Headshot';
 import { InjuryIndicator } from './InjuryIndicator';
 import { Mono } from './Mono';
@@ -50,14 +50,16 @@ const DEFAULT_COLUMNS: ColumnDef[] = [
 ];
 
 type PlayerRowProps = {
-  player: Player;
+  // The joined roster row from getRosterByFranchise — player identity +
+  // contract + bucket + computed points — not a flattened Player.
+  row: RosterRow;
   density?: Density;
   columns?: ColumnDef[];
   onPress?: () => void;
 };
 
 export function PlayerRow({
-  player,
+  row,
   density = 'standard',
   columns = DEFAULT_COLUMNS,
   onPress,
@@ -71,7 +73,7 @@ export function PlayerRow({
   const valueStyle = standard ? typo.dataMd : typo.dataSm;
   const hoverBg = standard ? gray[50] : gray[25];
 
-  const injury = toIndicatorStatus(player.injuryStatus);
+  const injury = toIndicatorStatus(row.injuryStatus);
 
   return (
     <Pressable
@@ -92,7 +94,7 @@ export function PlayerRow({
             col.align === 'right' && styles.cellRight,
           ]}
         >
-          {renderCell(col.key, player, {
+          {renderCell(col.key, row, {
             valueStyle,
             positionSize,
             headshotSize,
@@ -115,9 +117,10 @@ type CellCtx = {
 
 function renderCell(
   key: PlayerRowColumnKey,
-  player: Player,
+  row: RosterRow,
   ctx: CellCtx,
 ): React.ReactNode {
+  const { player, contract } = row;
   switch (key) {
     case 'position':
       return <PositionBadge position={player.position} size={ctx.positionSize} />;
@@ -141,30 +144,28 @@ function renderCell(
     case 'salary':
       return (
         <Text style={ctx.valueStyle} numberOfLines={1}>
-          {formatCurrency(player.salary)}
+          {contract ? formatCurrency(contract.baseSalary) : '—'}
         </Text>
       );
 
     case 'contractYears':
       return (
         <Text style={ctx.valueStyle} numberOfLines={1}>
-          {player.contractYears}
+          {contract ? contract.contractYearsRemaining : '—'}
         </Text>
       );
 
-    case 'weekScore': {
-      const last = player.weeklyScores[player.weeklyScores.length - 1] ?? 0;
+    case 'weekScore':
       return (
         <Text style={ctx.valueStyle} numberOfLines={1}>
-          {last.toFixed(2)}
+          {row.lastWeekPoints.toFixed(2)}
         </Text>
       );
-    }
 
     case 'seasonTotal':
       return (
         <Text style={ctx.valueStyle} numberOfLines={1}>
-          {player.seasonTotal.toFixed(2)}
+          {row.seasonPoints.toFixed(2)}
         </Text>
       );
 
@@ -175,12 +176,10 @@ function renderCell(
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-// Map MockPlayer.injuryStatus (full set) onto InjuryIndicator's supported
+// Map the player's injuryStatus (full set) onto InjuryIndicator's supported
 // codes. SUSPENDED / HOLDOUT / COVID collapse to null — per the Indicator
 // spec, those statuses aren't visually represented by this component.
-function toIndicatorStatus(
-  s: Player['injuryStatus'],
-): 'Q' | 'D' | 'O' | 'IR' | null {
+function toIndicatorStatus(s: InjuryStatus): 'Q' | 'D' | 'O' | 'IR' | null {
   if (s === 'QUESTIONABLE') return 'Q';
   if (s === 'DOUBTFUL') return 'D';
   if (s === 'OUT') return 'O';

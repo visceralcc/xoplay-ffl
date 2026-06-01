@@ -6,11 +6,16 @@ import { SegmentControl } from '@/components/SegmentControl';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { PlayerRow, type ColumnDef } from '@/components/PlayerRow';
 import {
-  getFranchiseById,
-  getPlayersByFranchise,
-  type Player,
+  computePointsFor,
+  computePointsAgainst,
+  computeRecord,
+  formatRecord,
+  getFranchiseIdentity,
+  getOwnerName,
+  getRosterByFranchise,
   type RosterBucket,
-} from '@/data/mockData';
+  type RosterRow,
+} from '@/data';
 
 // RosterView — Batch 5 screen composition for the roster surface
 // (Navigation "Roster Management", /:leagueSlug/my-team/roster). Read-only:
@@ -47,8 +52,8 @@ const ROSTER_COLUMNS: ColumnDef[] = [
 export function RosterView({ franchiseId }: RosterViewProps) {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const franchise = getFranchiseById(franchiseId);
-  const roster = getPlayersByFranchise(franchiseId);
+  const franchise = getFranchiseIdentity(franchiseId);
+  const roster = getRosterByFranchise(franchiseId);
 
   if (!franchise) {
     return (
@@ -61,22 +66,22 @@ export function RosterView({ franchiseId }: RosterViewProps) {
   // Counts render for every segment, including empty buckets (shows "0").
   const segments = SEGMENTS.map(
     ({ label, bucket }) =>
-      `${label} ${roster.filter((p) => p.rosterBucket === bucket).length}`,
+      `${label} ${roster.filter((r) => r.bucket === bucket).length}`,
   );
 
   const selected = SEGMENTS[activeIndex];
-  const bucketPlayers = roster.filter((p) => p.rosterBucket === selected.bucket);
+  const bucketRows = roster.filter((r) => r.bucket === selected.bucket);
 
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <FranchiseHeader
           franchise={franchise}
-          ownerName={franchise.ownerName}
-          record={franchise.record}
+          ownerName={getOwnerName(franchiseId)}
+          record={formatRecord(computeRecord(franchiseId))}
           tierLabel="DYNASTY · SALARY · CONTRACT"
-          pointsFor={franchise.pointsFor.toFixed(2)}
-          pointsAgainst={franchise.pointsAgainst.toFixed(2)}
+          pointsFor={computePointsFor(franchiseId).toFixed(2)}
+          pointsAgainst={computePointsAgainst(franchiseId).toFixed(2)}
         />
 
         <View style={styles.controls}>
@@ -87,15 +92,15 @@ export function RosterView({ franchiseId }: RosterViewProps) {
           />
         </View>
 
-        {bucketPlayers.length > 0 ? (
-          <DataTable<Player>
-            columns={ROSTER_COLUMNS as DataTableColumn<Player>[]}
-            data={bucketPlayers}
+        {bucketRows.length > 0 ? (
+          <DataTable<RosterRow>
+            columns={ROSTER_COLUMNS as DataTableColumn<RosterRow>[]}
+            data={bucketRows}
             density="compact"
             showDensityToggle={false}
-            renderRow={(player) => (
+            renderRow={(row) => (
               <PlayerRow
-                player={player}
+                row={row}
                 density="compact"
                 columns={ROSTER_COLUMNS}
               />
