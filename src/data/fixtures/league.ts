@@ -67,6 +67,11 @@ export const league: League = {
   irSalaryPercent: 20.0,
   taxiSalaryPercent: 10.0,
   playerSalaryEscalatorPercent: 10.0,
+  // §7.8 defaults — 75% of base on any drop, +33% of base per year beyond
+  // year 1, charged against the current season's cap.
+  dropPenaltyBasePercent: 75.0,
+  dropPenaltyPerAdditionalYearPercent: 33.0,
+  dropPenaltyMode: 'CURRENT_SEASON_ONLY',
   salaryDisplayFormat: 'WITH_CENTS',
   // scoring & tiebreakers (§4.2.12)
   tieHandling: 'ALLOW_TIES',

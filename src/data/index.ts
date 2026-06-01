@@ -47,6 +47,8 @@ export {
   computeCapUsage,
   effectiveCap,
   computeCapRoom,
+  computeDropPenalty,
+  computeDropImpact,
   computeCapUsageSummary,
   capTracked,
   contractsTracked,

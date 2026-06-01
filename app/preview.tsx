@@ -995,6 +995,7 @@ const REGISTRY: ComponentEntry[] = [
     frameMode: 'phone',
     defaultProps: {
       franchiseId: 'fr-prt',
+      isOwner: true,
     },
     propControls: [
       {
@@ -1005,14 +1006,21 @@ const REGISTRY: ComponentEntry[] = [
         // the empty-state line is demonstrable. The rest round out the picker.
         options: ['fr-prt', 'fr-mia', 'fr-oak', 'fr-bro', 'fr-san'],
       },
+      // Owner (/my-team) shows the context-bar "Set Lineup", the per-row
+      // action menu, and "Add Player"; visitor (/franchise/:slug) hides them
+      // and shows "Propose Trade" instead — hide-don't-disable.
+      { key: 'isOwner', type: 'toggle' },
     ],
     // Segment switching is interactive via RosterView's own state. Keying on
-    // franchiseId remounts the screen when the franchise changes so the bucket
-    // selection resets to Active.
+    // franchiseId + isOwner remounts the screen when either changes so the
+    // bucket selection (and any open action menu) resets cleanly. The owner
+    // action callbacks are left undefined — no backend yet, so the affordances
+    // render but pressing them is a no-op (stubbed, not wired).
     render: (props) => (
       <RosterView
-        key={props.franchiseId as string}
+        key={`${props.franchiseId as string}-${String(props.isOwner)}`}
         franchiseId={props.franchiseId as string}
+        isOwner={props.isOwner as boolean}
       />
     ),
   },

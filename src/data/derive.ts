@@ -284,6 +284,39 @@ export const effectiveCap = (_franchiseId: string, _season = SEASON): number =>
 export const computeCapRoom = (franchiseId: string): number =>
   round2(effectiveCap(franchiseId) - computeCapUsage(franchiseId));
 
+// Drop penalty for a single contract (§7.8): base% of salary on any drop, plus
+// per-additional-year% of salary for each year beyond the first. Returns 0 in
+// Redraft/Keeper — escalators and drop penalties do NOT apply outside Dynasty
+// even when salaries are tracked (Salary Cap E12 / Tiers §3.3). Null contract
+// (a player carrying no contract) has no penalty.
+export function computeDropPenalty(contract: Contract | null): number {
+  if (!contract || league.tier !== 'DYNASTY') return 0;
+  const base = contract.baseSalary * (league.dropPenaltyBasePercent / 100);
+  const additionalYears = Math.max(0, contract.contractYearsRemaining - 1);
+  const additional =
+    contract.baseSalary *
+    (league.dropPenaltyPerAdditionalYearPercent / 100) *
+    additionalYears;
+  return round2(base + additional);
+}
+
+// The cap consequences of dropping a player, for the drop-penalty preview
+// (Salary Cap §"add/drop"): the salary relief freed (the player's current
+// bucket-weighted cap charge), the drop penalty charged back, and the net cap
+// impact (positive = net charge, negative = net relief).
+export function computeDropImpact(contract: Contract | null): {
+  salaryRelief: number;
+  penalty: number;
+  netImpact: number;
+} {
+  if (!contract) return { salaryRelief: 0, penalty: 0, netImpact: 0 };
+  const salaryRelief = round2(
+    contract.baseSalary * bucketMultiplier(contract.currentRosterBucket),
+  );
+  const penalty = computeDropPenalty(contract);
+  return { salaryRelief, penalty, netImpact: round2(penalty - salaryRelief) };
+}
+
 export const computeCapUsageSummary = (franchiseId: string): CapUsage => ({
   capUsed: computeCapUsage(franchiseId),
   effectiveCap: effectiveCap(franchiseId),

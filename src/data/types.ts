@@ -156,6 +156,11 @@ export type League = {
   irSalaryPercent: number;
   taxiSalaryPercent: number;
   playerSalaryEscalatorPercent: number;
+  // drop penalty (§7.8) — charged when an owner drops a player to reflect the
+  // remaining contract obligation. Dynasty only (Tiers §3.3 / Salary Cap E12).
+  dropPenaltyBasePercent: number;
+  dropPenaltyPerAdditionalYearPercent: number;
+  dropPenaltyMode: 'CURRENT_SEASON_ONLY' | 'AMORTIZED';
   salaryDisplayFormat:
     | 'DOLLARS_ONLY' | 'WITH_CENTS' | 'WITH_COMMAS' | 'MILLIONS_ABBR';
   // scoring & tiebreakers
