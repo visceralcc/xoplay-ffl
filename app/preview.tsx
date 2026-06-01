@@ -32,10 +32,12 @@ import { PageShell } from '@/components/PageShell';
 import { TransactionRow } from '@/components/TransactionRow';
 import { RosterView } from '@/screens/RosterView';
 import { FranchiseHome } from '@/screens/FranchiseHome';
+import { Standings } from '@/screens/Standings';
 import {
   franchises,
   getFranchiseById,
   players,
+  standings,
   transactions,
   type Player,
   type TransactionType,
@@ -990,6 +992,23 @@ const REGISTRY: ComponentEntry[] = [
         key={props.franchiseId as string}
         franchiseId={props.franchiseId as string}
       />
+    ),
+  },
+  {
+    id: 'standings',
+    label: 'Standings',
+    category: 'Screens',
+    backgroundColor: gray[100],
+    frameMode: 'phone',
+    // League-wide and tier-agnostic, so no franchise/tier select. The `empty`
+    // toggle swaps the full mock standings (all five franchises, ranks 1–5,
+    // BRO → OAK → MIA → SAN → PRT) for `[]` to exercise the empty state.
+    defaultProps: {
+      empty: false,
+    },
+    propControls: [{ key: 'empty', type: 'toggle' }],
+    render: (props) => (
+      <Standings entries={(props.empty as boolean) ? [] : standings} />
     ),
   },
 ];
