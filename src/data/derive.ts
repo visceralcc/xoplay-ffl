@@ -14,7 +14,7 @@ import { contracts } from './fixtures/contracts';
 import { rosterEntries } from './fixtures/roster';
 import { stats, STAT_WEEKS } from './fixtures/stats';
 import { scoringRules } from './fixtures/scoring';
-import { matchups } from './fixtures/matchups';
+import { matchups, CURRENT_WEEK_NUMBER } from './fixtures/matchups';
 import { lineupEntries } from './fixtures/lineups';
 import { transactions } from './fixtures/transactions';
 import type {
@@ -132,6 +132,33 @@ export function getRosterByFranchise(franchiseId: string): RosterRow[] {
         lastWeekPoints: computePlayerPoints(r.playerId, LAST_WEEK),
       };
     });
+}
+
+// The franchise's current-week starters as joined roster rows — the subset of
+// getRosterByFranchise whose players hold a starting lineup slot in this week's
+// matchup (LineupEntry.isStarter). Feeds the Overview's roster-summary block,
+// which shows starters only and links out to the full Roster screen. Empty if
+// the franchise has no current matchup or no submitted lineup.
+export function getStartersByFranchise(franchiseId: string): RosterRow[] {
+  const matchup = matchups.find(
+    (m) =>
+      m.week === CURRENT_WEEK_NUMBER &&
+      (m.homeFranchiseId === franchiseId || m.awayFranchiseId === franchiseId),
+  );
+  if (!matchup) return [];
+  const starterIds = new Set(
+    lineupEntries
+      .filter(
+        (l) =>
+          l.matchupId === matchup.id &&
+          l.franchiseId === franchiseId &&
+          l.isStarter,
+      )
+      .map((l) => l.playerId),
+  );
+  return getRosterByFranchise(franchiseId).filter((r) =>
+    starterIds.has(r.player.id),
+  );
 }
 
 // ─── records / points / streak ───────────────────────────────────────────────
@@ -263,6 +290,25 @@ export const computeCapUsageSummary = (franchiseId: string): CapUsage => ({
   capRoom: computeCapRoom(franchiseId),
 });
 
+// Whether cap/contract regions show for this league (Spec_Tiers §6.1, applied
+// across the franchise surface): Dynasty always, Keeper only if trackSalaries,
+// Redraft never. The single source of truth the screens gate on so the rule
+// can't drift per-screen.
+export const capTracked = (): boolean =>
+  league.tier === 'DYNASTY' ||
+  (league.tier === 'KEEPER' && league.trackSalaries);
+
+// The masthead tier label, derived from league config rather than hardcoded
+// (Wireframes §1.3): "DYNASTY · SALARY · CONTRACT" with the salary/contract
+// segments present only when tracked; plain "KEEPER" / "REDRAFT" otherwise.
+export function tierLabel(): string {
+  if (league.tier !== 'DYNASTY') return league.tier;
+  const parts = ['DYNASTY'];
+  if (league.trackSalaries) parts.push('SALARY');
+  if (league.trackContracts) parts.push('CONTRACT');
+  return parts.join(' · ');
+}
+
 // ─── standings (replaces the hand-typed array) ───────────────────────────────
 
 const winPct = (r: WLT): number => {
@@ -338,6 +384,14 @@ export function computeStandings(leagueId: string = league.id): StandingsRow[] {
 
   return rows.map(({ _winPct, ...row }, i) => ({ rank: i + 1, ...row }));
 }
+
+// This franchise's row in the computed standings — its rank (standings
+// position) plus the full record/points line. Used by the Franchise Overview
+// quick-stat row. Undefined if the franchise isn't in the league.
+export const getStandingsRow = (
+  franchiseId: string,
+): StandingsRow | undefined =>
+  computeStandings().find((r) => r.franchiseId === franchiseId);
 
 // ─── transaction summaries (human-readable feed line) ────────────────────────
 

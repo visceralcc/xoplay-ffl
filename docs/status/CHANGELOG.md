@@ -4,6 +4,13 @@ All notable changes, logged per session. Tags: `[ui]` `[data]` `[infra]` `[spec]
 
 ---
 
+## 2026-06-01
+
+- [ui] Promoted `FranchiseHome` from the read-only Batch-5 composition to the **interactive Franchise Overview** screen (Franchise Screens build sequence step 1). Now renders the Wireframes §1.2 mobile stacking order: masthead → quick-stat row (PF, PA, streak, standings rank; + cap room/usage in cap tiers) → This Week matchup (pressable) → roster summary (starters only, slim PlayerRow column set, links to the full Roster screen) → tier-gated cap snapshot → recent activity (last 10). Adds outbound links (matchup / roster / cap / activity) and owner action affordances under the **hide-don't-disable** rule — owner sees "Set Lineup", visitor sees "Propose Trade" instead. Cap region is removed entirely (not greyed) when not cap-tracked. Composes built components unmodified; tokens-only
+- [data] Added derive helpers backing the screen: `capTracked()` (single source of truth for the Dynasty-always / Keeper-if-`trackSalaries` / Redraft-never cap rule), `tierLabel()` (config-driven masthead label), `getStandingsRow()` (a franchise's standings position), and `getStartersByFranchise()` (current-week starters joined from `LineupEntry.isStarter`)
+- [ui] Preview: `FranchiseHome` entry gains an `isOwner` toggle (owner vs. visitor affordances); outbound-link callbacks left undefined (route shell not built — links stubbed, not wired)
+- [docs] Flagged deferred Overview blocks (Upcoming Schedule, Trade Bait, Owner Articles) — no future-schedule / trade-bait / article data in the foundation fixture yet
+
 ## 2026-05-31
 
 - [docs] Updated `BUILD_STATUS` / `BACKLOG` / `CHANGELOG` / `Structure_Map` / `Component_PlayerRow` / `DESIGN` to reflect the approach pivot and the fixture + Standings work

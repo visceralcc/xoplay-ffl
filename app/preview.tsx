@@ -1024,24 +1024,32 @@ const REGISTRY: ComponentEntry[] = [
     frameMode: 'phone',
     defaultProps: {
       franchiseId: 'fr-bro',
+      isOwner: true,
     },
     propControls: [
       {
         key: 'franchiseId',
         type: 'select',
         // fr-bro (default) has a live matchup vs OAK, two transactions, and a
-        // near-cap meter. fr-san is in no matchup → This Week empty state.
-        // fr-mia has no transactions → Recent Activity empty state (and is
-        // over cap). fr-oak and fr-prt round out the picker.
-        options: ['fr-bro', 'fr-san', 'fr-mia', 'fr-oak', 'fr-prt'],
+        // near-cap meter. fr-mia has no transactions → Recent Activity empty
+        // state (and is over cap). fr-oak, fr-san, and fr-prt round out the
+        // picker.
+        options: ['fr-bro', 'fr-mia', 'fr-oak', 'fr-san', 'fr-prt'],
       },
+      // Owner (/my-team) shows the "Set Lineup" affordance; visitor
+      // (/franchise/:slug) hides it and shows "Propose Trade" instead —
+      // hide-don't-disable.
+      { key: 'isOwner', type: 'toggle' },
     ],
-    // Keying on franchiseId remounts the screen when the franchise changes so
-    // the composition rebuilds cleanly against the new franchise.
+    // Keying on franchiseId + isOwner remounts the screen when either changes
+    // so the composition rebuilds cleanly. Outbound-link callbacks are left
+    // undefined here — the franchise route shell isn't built yet, so the
+    // affordances render but pressing them is a no-op (stubbed, not wired).
     render: (props) => (
       <FranchiseHome
-        key={props.franchiseId as string}
+        key={`${props.franchiseId as string}-${String(props.isOwner)}`}
         franchiseId={props.franchiseId as string}
+        isOwner={props.isOwner as boolean}
       />
     ),
   },

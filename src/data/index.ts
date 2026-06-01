@@ -36,6 +36,7 @@ export {
   getLineupForMatchup,
   computePlayerPoints,
   getRosterByFranchise,
+  getStartersByFranchise,
   computeRecord,
   formatRecord,
   computePointsFor,
@@ -47,7 +48,10 @@ export {
   effectiveCap,
   computeCapRoom,
   computeCapUsageSummary,
+  capTracked,
+  tierLabel,
   computeStandings,
+  getStandingsRow,
   describeTransaction,
   getTransactionsByFranchise,
 } from './derive';
