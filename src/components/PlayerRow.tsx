@@ -55,6 +55,10 @@ type PlayerRowProps = {
   row: RosterRow;
   density?: Density;
   columns?: ColumnDef[];
+  /** Inter-column gap. Defaults to spacing.sm; a consuming table can tighten it
+   *  (e.g. to cluster numeric columns) as long as it matches its header's gap so
+   *  the two stay aligned. */
+  gap?: number;
   onPress?: () => void;
 };
 
@@ -62,6 +66,7 @@ export function PlayerRow({
   row,
   density = 'standard',
   columns = DEFAULT_COLUMNS,
+  gap = spacing.sm,
   onPress,
 }: PlayerRowProps) {
   const [hovered, setHovered] = useState(false);
@@ -82,7 +87,7 @@ export function PlayerRow({
       onHoverOut={() => setHovered(false)}
       style={[
         styles.row,
-        { height: rowHeight },
+        { height: rowHeight, gap },
         hovered && { backgroundColor: hoverBg },
       ]}
     >
@@ -201,6 +206,13 @@ export function cellStyle(col: ColumnDef) {
     : ({ flex: 1, minWidth: 0, alignItems } as const);
 }
 
+// Canonical width of the trailing per-row action affordance (the "⋯" trigger)
+// for roster-style tables. The owner view renders the trigger here; the visitor
+// view renders an empty cell of the SAME width — so the data columns line up
+// across owner and visitor and toggling owner moves nothing but the affordance.
+// Shared so the cap / contracts / transactions tables reserve the same slot.
+export const ACTION_COL_WIDTH = 36;
+
 // ─── styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
@@ -208,13 +220,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    gap: spacing.sm,
+    // gap is applied inline from the `gap` prop (default spacing.sm) so a
+    // consuming table can tighten it.
     borderBottomWidth: 1,
     borderBottomColor: gray[100],
   },
+  // Stretch to the cell's full width and allow shrink (minWidth:0) so the
+  // single-line player name truncates within the flex name column instead of
+  // overflowing into the injury badge / numeric block (mirrors Standings'
+  // franchiseNameWrap). Without this a long name ("Devon Bridgewater") pushes
+  // past the cell and collides with SAL.
   nameTeam: {
     flexDirection: 'column',
     justifyContent: 'center',
+    alignSelf: 'stretch',
+    minWidth: 0,
   },
   // The spec's one non-Condensed type — Barlow 400 14px. tight lineHeight
   // keeps the name + team stack inside the row at compact density.

@@ -4,7 +4,12 @@ import { gray, onColor, radius, spacing, status, type as typo } from '@/theme';
 import { FranchiseMark } from '@/components/FranchiseMark';
 import { SegmentControl } from '@/components/SegmentControl';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
-import { PlayerRow, cellStyle, type ColumnDef } from '@/components/PlayerRow';
+import {
+  PlayerRow,
+  cellStyle,
+  ACTION_COL_WIDTH,
+  type ColumnDef,
+} from '@/components/PlayerRow';
 import {
   capTracked,
   computeDropImpact,
@@ -31,10 +36,11 @@ import {
 // Table layout follows the config-driven column pattern (hardened on Standings,
 // commit 07aaa78): the header cells AND the PlayerRow body cells lay out from
 // ONE tier-aware ROSTER_COLUMNS array through the SAME cellStyle(col), inside
-// containers with the same md padding + sm gap, so they can't drift. When the
-// owner's per-row actions show, both the header and every row reserve an
-// identical trailing action cell of the same width, so the data columns stay
-// aligned across owner and visitor views alike.
+// containers with the same md padding + COLUMN_GAP, so they can't drift. The
+// trailing action cell is reserved in BOTH states — the owner view renders the
+// "⋯" trigger in it, the visitor view renders an empty spacer of the same width
+// — so the data columns stay put and toggling isOwner moves nothing but the
+// affordance appearing/disappearing in its reserved slot.
 //
 // Owner vs. visitor — hide, don't disable (Spec "Interaction patterns"): on
 // /my-team (isOwner) the context-bar "Set Lineup", the per-row ActionMenu, and
@@ -64,9 +70,18 @@ type RosterViewProps = {
   onProposeTrade?: (playerId?: string) => void;
 };
 
-// Trailing action-cell width — reserved on both the header and every row when
-// owner actions show, so the data columns line up across owner and visitor.
-const ACTION_W = 36;
+// Right-edge gutter so the trailing action column isn't flush to the screen
+// edge. Carried as paddingRight INSIDE the reserved action cell (not on the row
+// container) so the header fill still bleeds to the edge while the trigger sits
+// off it, and so the reserved footprint is identical in owner and visitor views.
+// PLACEHOLDER spacing — Figma will supersede.
+const TABLE_RIGHT_GUTTER = 20;
+
+// Inter-column gap for the roster table — tightened from spacing.sm so the
+// numeric block (Sal/Yrs/Wk/Total) reads as a cluster. Applied to BOTH the
+// header (headerData) and the PlayerRow body (its `gap` prop) so the two stay
+// aligned. PLACEHOLDER spacing — Figma will supersede.
+const COLUMN_GAP = 6;
 
 // Segment → rosterBucket mapping (Spec "Bucket filter"), with the tier gate
 // each tab requires: Active always; IR only if the league has IR spots; Taxi
@@ -96,16 +111,20 @@ function rosterColumns(): ColumnDef[] {
   const cols: ColumnDef[] = [
     { key: 'position', label: 'POS', width: 34 },
     { key: 'nameTeam', label: 'Player' }, // flex — absorbs leftover width
-    { key: 'injury', label: '', width: 14 },
+    // Fixed slot sized to the 16px InjuryIndicator so the badge holds position
+    // immediately after the (truncating) name and never wraps under it.
+    { key: 'injury', label: '', width: 16 },
   ];
+  // Numeric columns — trimmed close to their content so the right-aligned
+  // values cluster (with COLUMN_GAP) instead of spreading. PLACEHOLDER widths.
   if (capTracked()) {
-    cols.push({ key: 'salary', label: 'Sal', width: 50, align: 'right' });
+    cols.push({ key: 'salary', label: 'Sal', width: 46, align: 'right' });
   }
   if (contractsTracked()) {
-    cols.push({ key: 'contractYears', label: 'Yrs', width: 30, align: 'right' });
+    cols.push({ key: 'contractYears', label: 'Yrs', width: 28, align: 'right' });
   }
-  cols.push({ key: 'weekScore', label: 'Wk', width: 42, align: 'right' });
-  cols.push({ key: 'seasonTotal', label: 'Total', width: 48, align: 'right' });
+  cols.push({ key: 'weekScore', label: 'Wk', width: 38, align: 'right' });
+  cols.push({ key: 'seasonTotal', label: 'Total', width: 46, align: 'right' });
   return cols;
 }
 
@@ -206,7 +225,10 @@ export function RosterView({
                   </View>
                 ))}
               </View>
-              {isOwner ? <View style={[styles.actionCell, styles.headerData]} /> : null}
+              {/* Reserved trailing action cell — always rendered (empty in the
+                  visitor view) so the data columns don't shift when isOwner
+                  toggles. */}
+              <View style={[styles.actionCell, styles.headerData]} />
             </View>
 
             <DataTable<RosterRow>
@@ -221,18 +243,26 @@ export function RosterView({
                   <View>
                     <View style={styles.tableRow}>
                       <View style={styles.dataRegion}>
-                        <PlayerRow row={row} density="compact" columns={columns} />
+                        <PlayerRow
+                          row={row}
+                          density="compact"
+                          columns={columns}
+                          gap={COLUMN_GAP}
+                        />
                       </View>
-                      {isOwner ? (
-                        <View style={styles.actionCell}>
+                      {/* Reserved trailing action cell — always present (empty
+                          for visitors) so toggling isOwner moves nothing but
+                          the trigger inside it. */}
+                      <View style={styles.actionCell}>
+                        {isOwner ? (
                           <RowActionTrigger
                             active={open}
                             onPress={() =>
                               setOpenMenuPlayerId(open ? null : row.player.id)
                             }
                           />
-                        </View>
-                      ) : null}
+                        ) : null}
+                      </View>
                     </View>
 
                     {isOwner && open ? (
@@ -490,14 +520,14 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  // Header's data region adds the md padding + sm gap that PlayerRow brings on
-  // its own for body rows, plus the header height / fill / rule.
+  // Header's data region adds the md padding + COLUMN_GAP that PlayerRow brings
+  // on its own for body rows, plus the header height / fill / rule.
   headerData: {
     flexDirection: 'row',
     alignItems: 'center',
     height: 28,
     paddingHorizontal: spacing.md,
-    gap: spacing.sm,
+    gap: COLUMN_GAP,
     backgroundColor: gray[25],
     borderBottomWidth: 1,
     borderBottomColor: gray[200],
@@ -506,8 +536,13 @@ const styles = StyleSheet.create({
     ...typo.label,
     color: gray[500],
   },
+  // Reserved trailing action cell. Total footprint = the affordance width + the
+  // right-edge gutter (carried as paddingRight so the header fill still bleeds
+  // to the screen edge). Identical in owner and visitor views, so the data
+  // columns can't shift when isOwner toggles.
   actionCell: {
-    width: ACTION_W,
+    width: ACTION_COL_WIDTH + TABLE_RIGHT_GUTTER,
+    paddingRight: TABLE_RIGHT_GUTTER,
     alignItems: 'center',
     justifyContent: 'center',
   },
