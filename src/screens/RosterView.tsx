@@ -4,11 +4,13 @@ import { gray, spacing, type as typo } from '@/theme';
 import { FranchiseHeader } from '@/components/FranchiseHeader';
 import { SegmentControl } from '@/components/SegmentControl';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
-import { PlayerRow, type ColumnDef } from '@/components/PlayerRow';
+import { PlayerRow, cellStyle, type ColumnDef } from '@/components/PlayerRow';
 import {
+  capTracked,
   computePointsFor,
   computePointsAgainst,
   computeRecord,
+  contractsTracked,
   formatRecord,
   getFranchiseIdentity,
   getOwnerName,
@@ -17,12 +19,20 @@ import {
   type RosterRow,
 } from '@/data';
 
-// RosterView — Batch 5 screen composition for the roster surface
-// (Navigation "Roster Management", /:leagueSlug/my-team/roster). Read-only:
-// franchise masthead, an Active/IR/Taxi segment control with per-bucket
-// counts, and a roster table filtered to the selected bucket. Composes the
-// existing design-system components unmodified. Spec:
-// specs/roster/screens/Screen_RosterView.md.
+// RosterView — the roster surface (Navigation "Roster Management",
+// /:leagueSlug/my-team/roster and the read-only /:leagueSlug/franchise/:slug/
+// roster). Operational mood: an Active/IR/Taxi segment control with per-bucket
+// counts above a roster table filtered to the selected bucket. Composes the
+// built design-system components unmodified (placeholder UI). Spec:
+// specs/roster/screens/Screen_RosterView.md, parent
+// specs/franchise/Spec_FranchiseScreens.md.
+//
+// Table layout follows the config-driven column pattern (Spec build sequence
+// step 2 / hardened on Standings, commit 07aaa78): the header cells AND the
+// PlayerRow body cells lay out from ONE tier-aware ROSTER_COLUMNS array through
+// the SAME cellStyle(col) (exported from PlayerRow), inside containers with the
+// same paddingHorizontal (md) and gap (sm) — so every header label sits over
+// its column and the two can't drift. DataTable's own header is turned off.
 
 type RosterViewProps = {
   franchiseId: string;
@@ -36,18 +46,33 @@ const SEGMENTS: ReadonlyArray<{ label: string; bucket: RosterBucket }> = [
   { label: 'Taxi', bucket: 'TAXI_SQUAD' },
 ];
 
-// Dynasty (cap-tracking) compact column set for the 390px phone frame — the
-// reduced six-column layout the spec specifies, not PlayerRow's wide
-// eight-column default. DataTable header and PlayerRow body share this one
-// array so the columns line up.
-const ROSTER_COLUMNS: ColumnDef[] = [
-  { key: 'position', label: 'POS', width: 36 },
-  { key: 'headshot', label: '', width: 28 },
-  { key: 'nameTeam', label: 'Player' },
-  { key: 'injury', label: '', width: 16 },
-  { key: 'salary', label: 'Sal', width: 56, align: 'right' },
-  { key: 'seasonTotal', label: 'Total', width: 60, align: 'right' },
-];
+// ─── COLUMN CONFIG — single source of truth for the roster table layout ──────
+// Tier-aware: the salary column shows where the league tracks salaries
+// (capTracked: Dynasty always, Keeper if trackSalaries, Redraft never) and the
+// contract-years column where it tracks contracts (contractsTracked) —
+// Spec_FranchiseScreens "Tier variations". Tier-gated columns are OMITTED, not
+// rendered greyed. Headshot is dropped on this phone roster to give the flexing
+// name column room (Wireframes §2.2 mobile adaptation). Widths are tuned for
+// the 390px phone frame; the name column flexes to absorb the remainder.
+//
+// Returned to both the header and the PlayerRow body so a single array drives
+// both. Tune column geometry here; nothing downstream changes.
+function rosterColumns(): ColumnDef[] {
+  const cols: ColumnDef[] = [
+    { key: 'position', label: 'POS', width: 34 },
+    { key: 'nameTeam', label: 'Player' }, // flex — absorbs leftover width
+    { key: 'injury', label: '', width: 14 },
+  ];
+  if (capTracked()) {
+    cols.push({ key: 'salary', label: 'Sal', width: 50, align: 'right' });
+  }
+  if (contractsTracked()) {
+    cols.push({ key: 'contractYears', label: 'Yrs', width: 30, align: 'right' });
+  }
+  cols.push({ key: 'weekScore', label: 'Wk', width: 42, align: 'right' });
+  cols.push({ key: 'seasonTotal', label: 'Total', width: 48, align: 'right' });
+  return cols;
+}
 
 export function RosterView({ franchiseId }: RosterViewProps) {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -62,6 +87,8 @@ export function RosterView({ franchiseId }: RosterViewProps) {
       </View>
     );
   }
+
+  const columns = rosterColumns();
 
   // Counts render for every segment, including empty buckets (shows "0").
   const segments = SEGMENTS.map(
@@ -93,19 +120,31 @@ export function RosterView({ franchiseId }: RosterViewProps) {
         </View>
 
         {bucketRows.length > 0 ? (
-          <DataTable<RosterRow>
-            columns={ROSTER_COLUMNS as DataTableColumn<RosterRow>[]}
-            data={bucketRows}
-            density="compact"
-            showDensityToggle={false}
-            renderRow={(row) => (
-              <PlayerRow
-                row={row}
-                density="compact"
-                columns={ROSTER_COLUMNS}
-              />
-            )}
-          />
+          <View>
+            {/* Header — rendered from `columns` through the same cellStyle as
+                the rows, inside the same md padding + sm gap, so every label
+                sits over its column. DataTable's own header is off. */}
+            <View style={styles.tableHeader}>
+              {columns.map((col) => (
+                <View key={col.key} style={cellStyle(col)}>
+                  <Text style={styles.headerText} numberOfLines={1}>
+                    {col.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <DataTable<RosterRow>
+              columns={columns as DataTableColumn<RosterRow>[]}
+              data={bucketRows}
+              density="compact"
+              showHeader={false}
+              showDensityToggle={false}
+              renderRow={(row) => (
+                <PlayerRow row={row} density="compact" columns={columns} />
+              )}
+            />
+          </View>
         ) : (
           <View style={styles.emptyWrap}>
             <Text style={styles.empty}>No players on {selected.label}</Text>
@@ -131,6 +170,22 @@ const styles = StyleSheet.create({
   controls: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
+  },
+  // Header shares paddingHorizontal (md) + gap (sm) with PlayerRow's row so
+  // their cells line up exactly; only height / fill / rule differ.
+  tableHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 28,
+    paddingHorizontal: spacing.md,
+    gap: spacing.sm,
+    backgroundColor: gray[25],
+    borderBottomWidth: 1,
+    borderBottomColor: gray[200],
+  },
+  headerText: {
+    ...typo.label,
+    color: gray[500],
   },
   emptyWrap: {
     paddingHorizontal: spacing.lg,

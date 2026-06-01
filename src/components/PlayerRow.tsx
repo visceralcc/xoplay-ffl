@@ -87,13 +87,7 @@ export function PlayerRow({
       ]}
     >
       {columns.map((col, i) => (
-        <View
-          key={i}
-          style={[
-            cellLayout(col),
-            col.align === 'right' && styles.cellRight,
-          ]}
-        >
+        <View key={i} style={cellStyle(col)}>
           {renderCell(col.key, row, {
             valueStyle,
             positionSize,
@@ -191,11 +185,20 @@ function formatCurrency(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
-function cellLayout(col: ColumnDef) {
-  if (col.width != null) {
-    return { width: col.width, alignItems: col.align === 'right' ? 'flex-end' : 'flex-start' } as const;
-  }
-  return { flex: 1, alignItems: col.align === 'right' ? 'flex-end' : 'flex-start' } as const;
+// Cell geometry shared by PlayerRow's cells AND any table header rendered above
+// the rows (e.g. RosterView's roster table). Exported so a screen can render its
+// header from the SAME column-config array through the SAME function — header
+// and row widths then can't drift (the config-driven column pattern hardened on
+// Standings, commit 07aaa78). Fixed-width columns take their width; the flex
+// column (no width — the name/team column) gets flex:1 + minWidth:0 so the
+// header and the rows resolve it to the same width. Without minWidth:0 a long
+// name pushes the row's flex cell wider than the empty-label header cell, and
+// the two paths drift.
+export function cellStyle(col: ColumnDef) {
+  const alignItems = col.align === 'right' ? 'flex-end' : 'flex-start';
+  return col.width != null
+    ? ({ width: col.width, alignItems } as const)
+    : ({ flex: 1, minWidth: 0, alignItems } as const);
 }
 
 // ─── styles ──────────────────────────────────────────────────────────────────
@@ -208,9 +211,6 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: gray[100],
-  },
-  cellRight: {
-    alignItems: 'flex-end',
   },
   nameTeam: {
     flexDirection: 'column',

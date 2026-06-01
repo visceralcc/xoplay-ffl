@@ -49,6 +49,7 @@ export {
   computeCapRoom,
   computeCapUsageSummary,
   capTracked,
+  contractsTracked,
   tierLabel,
   computeStandings,
   getStandingsRow,

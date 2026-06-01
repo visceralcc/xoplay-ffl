@@ -298,6 +298,15 @@ export const capTracked = (): boolean =>
   league.tier === 'DYNASTY' ||
   (league.tier === 'KEEPER' && league.trackSalaries);
 
+// Whether contract-detail regions (contract-years column, contract status,
+// acquired-via) show for this league — the contract analogue of capTracked
+// (Spec_FranchiseScreens "Tier variations": Dynasty all contract columns;
+// Keeper "Contract Years if trackContracts"; Redraft hidden). The single source
+// of truth the roster table gates its contract columns on.
+export const contractsTracked = (): boolean =>
+  league.tier === 'DYNASTY' ||
+  (league.tier === 'KEEPER' && league.trackContracts);
+
 // The masthead tier label, derived from league config rather than hardcoded
 // (Wireframes §1.3): "DYNASTY · SALARY · CONTRACT" with the salary/contract
 // segments present only when tracked; plain "KEEPER" / "REDRAFT" otherwise.
