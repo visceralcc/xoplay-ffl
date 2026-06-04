@@ -34,6 +34,7 @@ import { RosterView } from '@/screens/RosterView';
 import { FranchiseHome } from '@/screens/FranchiseHome';
 import { Standings } from '@/screens/Standings';
 import { LeagueHome } from '@/screens/LeagueHome';
+import { Matchup } from '@/screens/Matchup';
 import {
   franchises,
   franchiseAbbreviations,
@@ -1083,6 +1084,36 @@ const REGISTRY: ComponentEntry[] = [
     render: (props) => (
       <LeagueHome
         key={String(props.neutral)}
+        viewerFranchiseId={(props.neutral as boolean) ? undefined : 'fr-bro'}
+      />
+    ),
+  },
+  {
+    id: 'matchup',
+    label: 'Matchup',
+    category: 'Screens',
+    backgroundColor: gray[100],
+    frameMode: 'phone',
+    defaultProps: {
+      // fr-bro's current-week (week 11) matchup is live vs OAK — bro is the home
+      // side, so it's marked "YOUR TEAM" by default. `neutral` clears the viewer
+      // marker; `noMatchup` resolves a week with no matchup to show the empty
+      // state. The screen is tier-agnostic, so there's no tier select.
+      neutral: false,
+      noMatchup: false,
+    },
+    propControls: [
+      { key: 'neutral', type: 'toggle' },
+      { key: 'noMatchup', type: 'toggle' },
+    ],
+    // Keying on both toggles remounts the screen so the composition rebuilds
+    // cleanly. onSetLineup is left undefined — the route shell isn't built, so
+    // the affordance is stubbed (renders but no-ops).
+    render: (props) => (
+      <Matchup
+        key={`${String(props.neutral)}-${String(props.noMatchup)}`}
+        franchiseId="fr-bro"
+        week={(props.noMatchup as boolean) ? 99 : undefined}
         viewerFranchiseId={(props.neutral as boolean) ? undefined : 'fr-bro'}
       />
     ),
