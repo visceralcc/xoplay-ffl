@@ -139,6 +139,11 @@ function cellLayout(col: CellGeometry) {
   }
   return {
     flex: 1,
+    // minWidth:0 matches the canonical row cell geometry (the flex/franchise
+    // column renders flex:1 + minWidth:0 on the row side), so a long flex-column
+    // header label can't refuse to shrink while its rows do — header and rows
+    // resolve the flex column to the same width.
+    minWidth: 0,
     alignItems: col.align === 'right' ? 'flex-end' : 'flex-start',
   } as const;
 }

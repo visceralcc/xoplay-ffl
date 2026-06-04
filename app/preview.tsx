@@ -33,6 +33,7 @@ import { TransactionRow } from '@/components/TransactionRow';
 import { RosterView } from '@/screens/RosterView';
 import { FranchiseHome } from '@/screens/FranchiseHome';
 import { Standings } from '@/screens/Standings';
+import { LeagueHome } from '@/screens/LeagueHome';
 import {
   franchises,
   franchiseAbbreviations,
@@ -1058,6 +1059,31 @@ const REGISTRY: ComponentEntry[] = [
         key={`${props.franchiseId as string}-${String(props.isOwner)}`}
         franchiseId={props.franchiseId as string}
         isOwner={props.isOwner as boolean}
+      />
+    ),
+  },
+  {
+    id: 'league-home',
+    label: 'LeagueHome',
+    category: 'Screens',
+    backgroundColor: gray[100],
+    frameMode: 'phone',
+    defaultProps: {
+      // fr-bro (the league leader) is the viewer by default so its live matchup
+      // vs OAK lifts to the top of the list and its standings row is tinted.
+      // The `neutral` toggle clears the viewer for the fully league-neutral view
+      // (no highlight, schedule-order matchups).
+      neutral: false,
+    },
+    propControls: [{ key: 'neutral', type: 'toggle' }],
+    // Outbound-link callbacks are left undefined — the league route shell isn't
+    // built yet, so the affordances render but pressing them is a no-op
+    // (stubbed, not wired). Keying on `neutral` remounts so the composition
+    // rebuilds cleanly when the viewer is cleared.
+    render: (props) => (
+      <LeagueHome
+        key={String(props.neutral)}
+        viewerFranchiseId={(props.neutral as boolean) ? undefined : 'fr-bro'}
       />
     ),
   },

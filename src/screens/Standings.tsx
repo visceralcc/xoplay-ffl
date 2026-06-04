@@ -29,14 +29,14 @@ type StandingsColumn = DataTableColumn<StandingsRow> & {
 };
 
 // ─── COLUMN CONFIG — single source of truth for the table layout ─────────────
-// The header cells AND the row cells are laid out from THIS array through the
-// same cellStyle(col) function, inside containers with the same paddingHorizontal
-// and gap — so every header label sits directly over its column and can never
-// drift. Tune column geometry here; nothing downstream needs to change.
+// This one array feeds DataTable twice — `columns` drives the header (DataTable
+// owns it; no hand-rolled header per the Placeholder Render Convention §3) and
+// `render` draws each body cell in `renderRow` — so the header and rows share a
+// single source and can't drift.
 //
 //   width  — fixed px for the numeric columns. OMIT on `franchise` to make it
-//            the flexing column that absorbs the leftover width (it also gets
-//            minWidth: 0 in cellStyle so header and row compute the same size).
+//            the flexing column that absorbs the leftover width (the row cell
+//            adds minWidth:0, and DataTable's header flex cell now matches).
 //   align  — 'right' on every numeric so the digits form a tight right block.
 //   label  — the header text.
 //   render — the row cell for that column.
@@ -44,8 +44,6 @@ type StandingsColumn = DataTableColumn<StandingsRow> & {
 // At 390px the fixed widths + gaps leave ~150px for the franchise column, wide
 // enough for the longest name ("Cascade Kingfishers") in the condensed name
 // token. If a name ever clips, nudge the numeric widths down 2–4px here.
-
-const CELL_GAP = 6; // px between every column (header + rows); between xs and sm
 
 const STANDINGS_COLUMNS: StandingsColumn[] = [
   {
@@ -108,17 +106,6 @@ const STANDINGS_COLUMNS: StandingsColumn[] = [
   },
 ];
 
-// ─── shared cell layout — drives header cells AND row cells ───────────────────
-// One function over the column array: fixed-width columns get their width;
-// the flex (franchise) column gets flex:1 + minWidth:0 so the header and the
-// rows resolve it to the SAME width (without minWidth:0 the two paths drift).
-function cellStyle(col: StandingsColumn) {
-  const alignItems = col.align === 'right' ? 'flex-end' : 'flex-start';
-  return col.width != null
-    ? ({ width: col.width, alignItems } as const)
-    : ({ flex: 1, minWidth: 0, alignItems } as const);
-}
-
 export function Standings({
   entries = computeStandings(LEAGUE_ID),
 }: StandingsProps) {
@@ -130,33 +117,29 @@ export function Standings({
         <View style={styles.region}>
           <Section title="Standings">
             {populated ? (
-              // Bleed the table back to full width so its own spacing.md gutter
-              // — not the section's lg gutter — sets the table edge, matching
-              // RosterView's full-bleed table. Rows render in rank order.
+              // Bleed the table back to full width so DataTable's own spacing.md
+              // gutter — not the section's lg gutter — sets the table edge,
+              // matching RosterView's full-bleed table. DataTable owns the
+              // header; rows render in rank order through renderRow off the SAME
+              // column config.
               <View style={styles.tableBleed}>
-                {/* Header — rendered here from STANDINGS_COLUMNS through the
-                    same cellStyle as the rows, so every label sits over its
-                    column. DataTable's own header is turned off. */}
-                <View style={styles.headerRow}>
-                  {STANDINGS_COLUMNS.map((col) => (
-                    <View key={col.key} style={cellStyle(col)}>
-                      <Text style={styles.headerText} numberOfLines={1}>
-                        {col.label}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-
                 <DataTable<StandingsRow>
                   columns={STANDINGS_COLUMNS}
                   data={entries}
                   density="compact"
-                  showHeader={false}
                   showDensityToggle={false}
                   renderRow={(entry) => (
                     <View style={styles.row}>
                       {STANDINGS_COLUMNS.map((col) => (
-                        <View key={col.key} style={cellStyle(col)}>
+                        <View
+                          key={col.key}
+                          style={[
+                            col.width != null
+                              ? { width: col.width }
+                              : styles.cellFlex,
+                            col.align === 'right' && styles.cellRight,
+                          ]}
+                        >
                           {col.render(entry)}
                         </View>
                       ))}
@@ -193,35 +176,33 @@ const styles = StyleSheet.create({
   tableBleed: {
     marginHorizontal: -spacing.lg,
   },
-  // Header and row share paddingHorizontal (md) + gap (CELL_GAP) so their cells
-  // line up exactly; only height / fill / rule differ.
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 28,
-    paddingHorizontal: spacing.md,
-    gap: CELL_GAP,
-    backgroundColor: gray[25],
-    borderBottomWidth: 1,
-    borderBottomColor: gray[200],
-  },
-  headerText: {
-    ...typo.label,
-    color: gray[500],
-  },
+  // Body-row scaffold. Geometry mirrors DataTable's header (paddingHorizontal
+  // spacing.md, gap spacing.sm) so the body cells sit under their header labels;
+  // height is the sanctioned table-geometry px exception (§1).
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     height: 32,
     paddingHorizontal: spacing.md,
-    gap: CELL_GAP,
+    gap: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: gray[100],
+  },
+  // The franchise column flexes to absorb leftover width (no fixed `width`),
+  // mirroring DataTable's header cell for the same column.
+  cellFlex: {
+    flex: 1,
+    minWidth: 0,
+  },
+  // Numeric cells right-align so the digits form a tight block under their
+  // right-aligned header label.
+  cellRight: {
+    alignItems: 'flex-end',
   },
   franchiseCell: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: CELL_GAP,
+    gap: spacing.sm,
     // Stretch to the cell's full width so the name wrapper below can bound the
     // name (the cell wrapper is a column with alignItems:flex-start).
     alignSelf: 'stretch',
