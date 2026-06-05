@@ -4,7 +4,7 @@
 
 **Status:** Draft
 **Parent:** [Spec_XOPlay_PRD.md](../../specs/Spec_XOPlay_PRD.md), [Templates_SpecDocs.md](../../specs/Templates_SpecDocs.md)
-**Last updated:** May 2026
+**Last updated:** June 2026
 
 ---
 
@@ -126,6 +126,7 @@ docs/
 │   ├── Spec_FranchiseScreens.md
 │   ├── screens/
 │   │   ├── Screen_FranchiseHome.md
+│   │   ├── Screen_Matchup.md             ← Current Matchup (Nav §6.1 my-team/matchup; built as placeholder)
 │   │   ├── Screen_FranchiseHistory.md
 │   │   └── Screen_FranchiseSettings.md
 │   └── components/
